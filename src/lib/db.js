@@ -196,6 +196,17 @@ export async function createAuditoria({
   }
   return aud.id;
 }
+export async function saveRascunho(auditoriaId, itens) {
+  const rows = itens.map((it) => ({
+    id: it.id, auditoria_id: auditoriaId, area: it.area, codigo: it.codigo, requisito: it.requisito,
+    resultado: it.resultado, obs: it.obs || "", peso: it.peso ?? 1,
+    colaborador_id: it.colaboradorId || null, processo: it.processo || null,
+  }));
+  if (rows.length) {
+    const { error } = await supabase.from("auditoria_itens").upsert(rows, { onConflict: "id" });
+    if (error) throw error;
+  }
+}
 export async function saveExecucao(auditoriaId, tipo, itens, colaboradorNome = {}) {
   // salva TODOS os itens numa única chamada (rápido) em vez de um a um
   const rows = itens.map((it) => ({

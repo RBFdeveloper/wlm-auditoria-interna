@@ -1,9 +1,9 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { LayoutDashboard, ClipboardList, AlertTriangle, BookOpenCheck, Plus, ChevronRight, Building2, Users, LogOut, Contact } from "lucide-react";
-import { APP_VERSION, LOGO_WLM } from "./constants";
+import { LOGO_WLM } from "./constants";
 import { unitById, can, roleLabel, allowedUnits, computeMetrics, initials, titleMap, titleEyebrow } from "./utils";
 import { BrandMark, WlmLogo, TopAccent } from "./ui/common";
-import { auth, listStandards, listAuditorias, listNCs, listUsuarios, createAuditoria, saveExecucao, tratarNC, criarUsuario, listColaboradores, createColaborador, updateColaborador, deleteColaborador, createTema, deleteTema, updateTemaModo, listSiglas, updateSigla } from "./lib/db";
+import { auth, listStandards, listAuditorias, listNCs, listUsuarios, createAuditoria, saveExecucao, saveRascunho, tratarNC, criarUsuario, listColaboradores, createColaborador, updateColaborador, deleteColaborador, createTema, deleteTema, updateTemaModo, listSiglas, updateSigla } from "./lib/db";
 import { gerarRelatorioPDF } from "./lib/pdf";
 import { Dashboard } from "./views/Dashboard";
 import { Auditorias } from "./views/Auditorias";
@@ -79,6 +79,7 @@ export default function App() {
       return id;
     },
     async saveExecution(id, tipo, itens, nomes) { await saveExecucao(id, tipo, itens, nomes); await carregar(); },
+    async saveDraft(id, itens) { await saveRascunho(id, itens); await carregar(); },
     async treatNc(id, patch) { await tratarNC(id, patch); await carregar(); },
     async createTema(t) { await createTema(t); await carregar(); },
     async delTema(codigo) { await deleteTema(codigo); await carregar(); },
@@ -178,7 +179,6 @@ export default function App() {
           </div>
           <button className="logout" title="Sair" onClick={async () => { await auth.logout(); setUser(null); }}><LogOut size={16} /></button>
         </div>
-        {!collapsed && <div className="side-version">{APP_VERSION}</div>}
       </aside>
 
       {/* ---------------- Main ---------------- */}
@@ -251,7 +251,8 @@ export default function App() {
             const a = auditById(modal.id);
             const nomes = Object.fromEntries(colaboradores.map((c) => [c.id, c.nome]));
             await handlers.saveExecution(modal.id, a.tipo, itens, nomes); setModal(null); setView("ncs");
-          }} />
+          }}
+          onDraft={async (itens) => { await handlers.saveDraft(modal.id, itens); setModal(null); }} />
       )}
       {modal?.type === "treat" && ncById(modal.id) && (
         <TratarNC nc={ncById(modal.id)} audit={auditById(ncById(modal.id).auditoriaId)}

@@ -4,7 +4,7 @@ import { RESULT_META } from "../constants";
 import { unitById, findReq } from "../utils";
 import { Modal } from "../ui/common";
 
-function ExecutarAuditoria({ audit, standards, colaboradores = [], readOnly, onClose, onSave }) {
+function ExecutarAuditoria({ audit, standards, colaboradores = [], readOnly, onClose, onSave, onDraft }) {
   const [itens, setItens] = useState(audit.itens);
   const [zoom, setZoom] = useState(null);
   const porColaborador = audit.modo === "colaborador" || audit.modo === "funcionario";
@@ -142,6 +142,11 @@ function ExecutarAuditoria({ audit, standards, colaboradores = [], readOnly, onC
       <div className="modal-f">
         {!readOnly && !podeConcluir && <div className="exec-motivo">⚠ {motivo}</div>}
         <button className="btn ghost" onClick={onClose}>Fechar</button>
+        {!readOnly && onDraft && (
+          <button className="btn ghost" onClick={() => onDraft(itens)} title="Guarda o progresso e fecha; você continua depois">
+            Salvar rascunho
+          </button>
+        )}
         {!readOnly && (
           <button className="btn primary" disabled={!podeConcluir} onClick={() => onSave(itens)}>
             {isOPEG

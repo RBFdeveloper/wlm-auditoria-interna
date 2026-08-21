@@ -75,7 +75,7 @@ function Padroes({ standards, canEdit, reload, onNewTema, onDelTema, onTemaModo 
                 ? <input className="area-input" defaultValue={a.area} key={a.id + a.area}
                     onBlur={(e) => onRenameArea(a, e.target.value)} />
                 : <span>{a.area}</span>}
-              {(std.modo === "departamento" || ehColaborador(std.modo)) && (
+              {(std.modo === "departamento" || ehColaborador(std.modo)) && tipo !== "OPEG" && (
                 canEdit
                   ? <input className="depto-input" list="lst-departamentos" placeholder={ehColaborador(std.modo) ? "departamento da atividade…" : "departamento…"} defaultValue={a.departamento || ""} key={a.id + "d" + (a.departamento || "")}
                       onBlur={(e) => { const v = e.target.value.trim(); if (v !== (a.departamento || "")) run(() => updateArea(a.id, { departamento: v })); }} />
