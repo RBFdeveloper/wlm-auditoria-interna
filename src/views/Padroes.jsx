@@ -3,6 +3,7 @@ import { Plus, ShieldCheck, Building2, ImagePlus, Trash2, Camera, Pencil } from 
 import { DEPARTAMENTOS } from "../constants";
 import { ehColaborador, modoTag } from "../utils";
 import { addArea, updateArea, deleteArea, addRequisito, updateRequisito, deleteRequisito, uploadFotoRequisito } from "../lib/db";
+import { NovoTema } from "../modals/NovoTema";
 
 function Padroes({ standards, canEdit, reload, onNewTema, onDelTema, onTemaModo }) {
   const temas = Object.keys(standards);
