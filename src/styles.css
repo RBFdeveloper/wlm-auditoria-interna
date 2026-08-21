@@ -10,6 +10,8 @@
   --disp:'Rajdhani',sans-serif; --body:'DM Sans',sans-serif;
 }
 *{box-sizing:border-box}
+html,body,#root{margin:0; padding:0; width:100%; min-height:100vh; background:var(--surface)}
+html,body{overflow-x:hidden}
 .app{display:flex; min-height:100vh; font-family:var(--body); color:var(--text);
   background:var(--surface); font-size:14px; -webkit-font-smoothing:antialiased}
 
@@ -452,11 +454,26 @@
 .role-pill[data-r="visualizador"]{color:var(--dim); border-color:var(--card-line); background:#f4f6f8}
 .nc-wait{font-size:12px; color:var(--dim); font-style:italic}
 
+@media(max-width:1024px){
+  .content{padding:18px 16px}
+  .topbar{padding:16px 16px}
+  .sidebar{width:210px}
+  table{display:block; overflow-x:auto; white-space:nowrap}
+}
 @media(max-width:1000px){
   .grid-dash{grid-template-columns:1fr}
   .hero{grid-template-columns:1fr}
   .hero-gauge{border-right:0; border-bottom:1px solid var(--card-line); padding-right:0; padding-bottom:12px}
   .std-areas{grid-template-columns:1fr}
+  .hero-readouts{grid-template-columns:1fr 1fr}
+}
+@media(max-width:900px){
+  .sidebar{width:68px}
+  .sidebar .brand-txt,.sidebar .nav-item span,.sidebar .nav-item .badge,.sidebar .side-user,.sidebar .side-version,.sidebar .logout{display:none}
+  .sidebar .brand{flex-direction:column; gap:12px; padding:18px 0}
+  .sidebar .nav-item{justify-content:center; padding:11px 0}
+  .sidebar .nav{padding:6px}
+  .sidebar .side-foot{justify-content:center; padding:14px 0}
 }
 @media(max-width:720px){
   .sidebar{display:none}
