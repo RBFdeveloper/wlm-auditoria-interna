@@ -67,6 +67,8 @@ function Auditorias({ audits, canAudit, onNew, onExec, onPdf }) {
               const av = a.itens.filter((i) => i.resultado === "conforme" || i.resultado === "nao_conforme");
               const ok = av.filter((i) => i.resultado === "conforme").length;
               const taxa = av.length ? Math.round((ok / av.length) * 100) : null;
+              const isOPEG = a.tipo === "OPEG";
+              const classifCls = { "Ouro": "ouro", "Prata": "prata", "Bronze": "bronze", "Sem classificação": "sem" }[a.classificacao] || "sem";
               const u = unitById(a.unidadeId);
               return (
                 <tr key={a.id}>
@@ -77,8 +79,12 @@ function Auditorias({ audits, canAudit, onNew, onExec, onPdf }) {
                   </td>
                   <td>{a.setor}</td>
                   <td className="dim">{fmtDate(a.data)}</td>
-                  <td>{taxa === null ? <span className="dim">—</span> :
-                    <span className="mini-meter"><i style={{ width: `${taxa}%`, background: taxa >= 90 ? "var(--ok)" : taxa >= 70 ? "var(--warn)" : "var(--no)" }} /><b>{taxa}%</b></span>}</td>
+                  <td>{isOPEG
+                    ? (a.pontuacao != null
+                        ? <span className={`classif-badge ${classifCls}`}>{a.pontuacao} pts · {a.classificacao}</span>
+                        : <span className="dim">—</span>)
+                    : (taxa === null ? <span className="dim">—</span>
+                        : <span className="mini-meter"><i style={{ width: `${taxa}%`, background: taxa >= 90 ? "var(--ok)" : taxa >= 70 ? "var(--warn)" : "var(--no)" }} /><b>{taxa}%</b></span>)}</td>
                   <td><StatusPill map={AUD_STATUS} k={a.status} /></td>
                   <td>
                     <div className="row-actions">
