@@ -104,6 +104,15 @@ function Padroes({ standards, canEdit, reload, onNewTema, onDelTema, onTemaModo 
                       ? <input className="req-title-input" defaultValue={r.t} key={r.id + r.t}
                           onBlur={(e) => e.target.value.trim() && e.target.value !== r.t && onEditReq(r, { titulo: e.target.value })} />
                       : <span className="req-title">{r.t}</span>}
+                    {tipo === "OPEG" && (
+                      canEdit
+                        ? <label className="peso-box" title="Peso deste requisito na pontuação">
+                            <span>peso</span>
+                            <input type="number" min="0" step="1" defaultValue={r.peso ?? 1} key={r.id + "p" + (r.peso ?? 1)}
+                              onBlur={(e) => { const v = parseInt(e.target.value, 10); if (!isNaN(v) && v !== (r.peso ?? 1)) onEditReq(r, { peso: v }); }} />
+                          </label>
+                        : <span className="peso-tag">peso {r.peso ?? 1}</span>
+                    )}
                     {canEdit && <button className="mini-del" onClick={() => onDelReq(r)} title="Remover"><Trash2 size={14} /></button>}
                   </div>
                   {canEdit

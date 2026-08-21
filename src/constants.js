@@ -47,6 +47,8 @@ const RESULT_META = {
   conforme:     { label: "Conforme",     color: "var(--ok)",   Icon: Check },
   nao_conforme: { label: "Não conforme", color: "var(--no)",   Icon: X },
   na:           { label: "N/A",          color: "var(--dim)",  Icon: Minus },
+  atende:     { label: "Atende",     color: "var(--ok)", Icon: Check },
+  nao_atende: { label: "Não atende", color: "var(--no)", Icon: X },
 };
 const NC_STATUS = {
   aberta:        { label: "Aberta",        color: "var(--no)",   Icon: CircleDot },

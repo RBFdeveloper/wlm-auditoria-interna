@@ -79,7 +79,7 @@ export async function listStandards() {
   for (const a of areas || []) {
     if (!std[a.tipo]) std[a.tipo] = { nome: a.tipo, modo: "unidade", areas: [] };
     const rs = (reqs || []).filter((r) => r.area_id === a.id).map((r) => ({
-      id: r.id, c: r.codigo, t: r.titulo, instrucao: r.instrucao || "",
+      id: r.id, c: r.codigo, t: r.titulo, instrucao: r.instrucao || "", peso: r.peso ?? 1,
       foto: r.foto_path ? publicFotoUrl(r.foto_path) : null, foto_path: r.foto_path,
     }));
     std[a.tipo].areas.push({ id: a.id, area: a.nome, departamento: a.departamento || "", reqs: rs });
@@ -138,9 +138,11 @@ function mapAudit(row) {
     setor: row.setor, auditor: row.auditor, responsavel: row.setor,
     data: row.data, status: row.status, modo: row.modo || "unidade",
     departamento: row.departamento || null, responsavelNome: row.responsavel_nome || null,
+    pontuacao: row.pontuacao ?? null, classificacao: row.classificacao || null,
     itens: (row.itens || []).map((i) => ({
       id: i.id, area: i.area, codigo: i.codigo, requisito: i.requisito,
       resultado: i.resultado, obs: i.obs || "", colaboradorId: i.colaborador_id || null, processo: i.processo || null,
+      peso: i.peso ?? 1,
     })),
   };
 }
@@ -179,7 +181,7 @@ export async function createAuditoria({
     if (modo === "colaborador" && atividades && atividades.length) areas = areas.filter((a) => atividades.includes(a.area));
     return areas;
   };
-  const reqsDe = (areas) => areas.flatMap((a) => a.reqs.map((r) => ({ area: a.area, codigo: r.c, requisito: r.t })));
+  const reqsDe = (areas) => areas.flatMap((a) => a.reqs.map((r) => ({ area: a.area, codigo: r.c, requisito: r.t, peso: r.peso ?? 1 })));
 
   let itens;
   if (modo === "colaborador" || modo === "funcionario") {
@@ -199,13 +201,21 @@ export async function saveExecucao(auditoriaId, tipo, itens, colaboradorNome = {
   const rows = itens.map((it) => ({
     id: it.id, auditoria_id: auditoriaId, area: it.area, codigo: it.codigo, requisito: it.requisito,
     resultado: it.resultado, obs: it.obs || "",
-    colaborador_id: it.colaboradorId || null, processo: it.processo || null,
+    colaborador_id: it.colaboradorId || null, processo: it.processo || null, peso: it.peso ?? 1,
   }));
   if (rows.length) {
     const { error } = await supabase.from("auditoria_itens").upsert(rows, { onConflict: "id" });
     if (error) throw error;
   }
-  await supabase.from("auditorias").update({ status: "concluida" }).eq("id", auditoriaId);
+  const patchAud = { status: "concluida" };
+  if (tipo === "OPEG") {
+    const total = itens.reduce((s, it) => s + (it.peso ?? 1), 0);
+    const feitos = itens.filter((it) => it.resultado === "atende").reduce((s, it) => s + (it.peso ?? 1), 0);
+    const pontos = total > 0 ? Math.round((feitos / total) * 100) : 0;
+    patchAud.pontuacao = pontos;
+    patchAud.classificacao = pontos >= 90 ? "Ouro" : pontos >= 80 ? "Prata" : pontos >= 70 ? "Bronze" : "Sem classificação";
+  }
+  await supabase.from("auditorias").update(patchAud).eq("id", auditoriaId);
   const { data: existentes } = await supabase.from("nao_conformidades")
     .select("codigo, colaborador_id, processo").eq("auditoria_id", auditoriaId);
   const key = (c, cid, proc) => `${c}|${cid || ""}|${proc || ""}`;

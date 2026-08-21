@@ -13,6 +13,7 @@ function NovaAuditoria({ onClose, onCreate, scope, units = UNITS, standards, col
   const [sel, setSel] = useState([]);        // colaboradores (modo colaborador)
   const [depto, setDepto] = useState("");    // departamento (modo departamento)
   const [respId, setRespId] = useState("");  // responsável (modo departamento)
+  const [deptOutro, setDeptOutro] = useState("");
 
   const modo = modoDoTema(f.tipo, standards);
   const std = standards[f.tipo] || { areas: [] };
@@ -38,20 +39,22 @@ function NovaAuditoria({ onClose, onCreate, scope, units = UNITS, standards, col
   };
   const totalReq = std.areas.reduce((n, a) => n + a.reqs.length, 0);
 
+  const deptFinal = depto === "__outros__" ? deptOutro.trim() : depto;
+
   const podeCriar =
     modo === "unidade" ? totalReq > 0 :
-    modo === "departamento" ? (!!depto && reqsDoDepto(depto) > 0) :
+    modo === "departamento" ? (!!deptFinal && reqsDoDepto(depto) > 0) :
     (doHouse.length > 0 && std.areas.length > 0);
 
   const sigla = (siglas[f.unidadeId] || "??").toUpperCase();
   const codigoPreview = `${f.tipo}${sigla}NN/${(f.data || "").slice(2, 4)}`;
 
   const criar = () => {
-    const setor = modo === "departamento" ? (depto || "—")
+    const setor = modo === "departamento" ? (deptFinal || "—")
       : modo === "colaborador" ? "Por colaborador" : "Geral";
     const payload = { ...f, setor, modo };
     if (modo === "departamento") {
-      payload.departamento = depto;
+      payload.departamento = deptFinal;
       payload.responsavelNome = doHouse.find((c) => c.id === respId)?.nome || null;
     }
     if (modo === "colaborador") payload.colaboradores = doHouse.filter((c) => sel.includes(c.id));
@@ -97,7 +100,12 @@ function NovaAuditoria({ onClose, onCreate, scope, units = UNITS, standards, col
                 : <select value={depto} onChange={(e) => setDepto(e.target.value)}>
                     <option value="">Selecione…</option>
                     {deptOptions.map((d) => <option key={d} value={d}>{d} · {reqsDoDepto(d)} req.</option>)}
+                    <option value="__outros__">Outros (digitar)…</option>
                   </select>}
+              {depto === "__outros__" && (
+                <input className="dept-outro-input" placeholder="Digite o departamento auditado"
+                  value={deptOutro} onChange={(e) => setDeptOutro(e.target.value)} autoFocus />
+              )}
             </Field>
             <Field label="Responsável (opcional)" icon={Contact}>
               <select value={respId} onChange={(e) => setRespId(e.target.value)}>

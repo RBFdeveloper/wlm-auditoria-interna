@@ -19,9 +19,11 @@ function ExecutarAuditoria({ audit, standards, colaboradores = [], readOnly, onC
   const [aba, setAba] = useState(subjetos[0] || null);
 
   const set = (i, patch) => setItens((prev) => prev.map((it, idx) => idx === i ? { ...it, ...patch } : it));
-  const avaliadoR = (r) => r === "conforme" || r === "nao_conforme";
+  const isOPEG = audit.tipo === "OPEG";
+  const RESULTS = isOPEG ? ["atende", "nao_atende"] : ["conforme", "nao_conforme", "na"];
+  const avaliadoR = (r) => isOPEG ? (r === "atende" || r === "nao_atende") : (r === "conforme" || r === "nao_conforme");
   const pend = (i) => !i.resultado || i.resultado === "pendente";
-  const semC = (i) => (i.resultado === "nao_conforme" || i.resultado === "na") && !(i.obs || "").trim();
+  const semC = (i) => !isOPEG && (i.resultado === "nao_conforme" || i.resultado === "na") && !(i.obs || "").trim();
 
   // estatísticas GERAIS (toda a auditoria)
   const av = itens.filter((i) => avaliadoR(i.resultado));
@@ -32,6 +34,11 @@ function ExecutarAuditoria({ audit, standards, colaboradores = [], readOnly, onC
   const podeConcluir = pendentes === 0 && semComentario === 0;
   const motivo = pendentes > 0 ? `${pendentes} item(ns) sem avaliação`
     : semComentario > 0 ? `${semComentario} item(ns) sem comentário obrigatório` : "";
+
+  const pesoTotal = itens.reduce((s, i) => s + (i.peso ?? 1), 0);
+  const pesoFeito = itens.filter((i) => i.resultado === "atende").reduce((s, i) => s + (i.peso ?? 1), 0);
+  const pontos = pesoTotal ? Math.round((pesoFeito / pesoTotal) * 100) : 0;
+  const classif = pontos >= 90 ? "Ouro" : pontos >= 80 ? "Prata" : pontos >= 70 ? "Bronze" : "Sem classificação";
 
   // itens visíveis (filtrados pela aba do sujeito, se for o caso)
   const visiveis = itens.map((it, idx) => ({ ...it, idx }))
@@ -54,8 +61,14 @@ function ExecutarAuditoria({ audit, standards, colaboradores = [], readOnly, onC
       sub={`${readOnly ? "Revisar" : "Executar"} · ${audit.tipo} · ${modoLabel}${audit.responsavelNome ? " · resp: " + audit.responsavelNome : ""}`}
       onClose={onClose} wide>
       <div className="exec-bar">
-        <div className="exec-stat"><span>Conformidade</span><b>{taxa}%</b></div>
-        <div className="exec-stat"><span>Não conformes</span><b style={{ color: ncCount ? "var(--no)" : "inherit" }}>{ncCount}</b></div>
+        {isOPEG ? (<>
+          <div className="exec-stat"><span>Pontuação</span><b>{pontos} pts</b></div>
+          <div className="exec-stat"><span>Classificação</span><b>{classif}</b></div>
+          <div className="exec-stat"><span>Peso atingido</span><b>{pesoFeito}/{pesoTotal}</b></div>
+        </>) : (<>
+          <div className="exec-stat"><span>Conformidade</span><b>{taxa}%</b></div>
+          <div className="exec-stat"><span>Não conformes</span><b style={{ color: ncCount ? "var(--no)" : "inherit" }}>{ncCount}</b></div>
+        </>)}
         <div className="exec-stat"><span>Respondidos</span><b>{itens.filter((i) => !pend(i)).length}/{itens.length}</b></div>
         {porSujeito && <div className="exec-stat"><span>{porColaborador ? "Colaboradores" : "Processos"}</span><b>{subjetos.length}</b></div>}
       </div>
@@ -80,7 +93,7 @@ function ExecutarAuditoria({ audit, standards, colaboradores = [], readOnly, onC
             <div className="exec-area-h">{area}</div>
             {list.map((it) => {
               const ref = findReq(standards, audit.tipo, it.codigo) || {};
-              const precisaObs = it.resultado === "nao_conforme" || it.resultado === "na";
+              const precisaObs = !isOPEG && (it.resultado === "nao_conforme" || it.resultado === "na");
               const faltaObs = precisaObs && !(it.obs || "").trim();
               const isPend = pend(it);
               return (
@@ -94,6 +107,7 @@ function ExecutarAuditoria({ audit, standards, colaboradores = [], readOnly, onC
                     <div className="exec-reqline">
                       <span className="std-code">{it.codigo}</span>
                       <span className="exec-reqt">{it.requisito}</span>
+                      {isOPEG && <span className="peso-tag">peso {it.peso ?? 1}</span>}
                       {isPend && <span className="pend-tag">pendente</span>}
                     </div>
                     {ref.instrucao && <div className="exec-instr"><Eye size={12} /> {ref.instrucao}</div>}
@@ -107,13 +121,14 @@ function ExecutarAuditoria({ audit, standards, colaboradores = [], readOnly, onC
                     )}
                   </div>
                   <div className="exec-actions">
-                    {["conforme", "nao_conforme", "na"].map((r) => {
+                    {RESULTS.map((r) => {
                       const meta = RESULT_META[r];
                       return (
                         <button key={r} className={`res-btn ${it.resultado === r ? "on" : ""}`} disabled={readOnly}
                           style={it.resultado === r ? { background: meta.color, borderColor: meta.color, color: "#fff" } : {}}
                           onClick={() => set(it.idx, { resultado: r })} title={meta.label}>
                           <meta.Icon size={15} />
+                          {isOPEG && <span className="res-btn-txt">{meta.label}</span>}
                         </button>
                       );
                     })}
@@ -129,7 +144,9 @@ function ExecutarAuditoria({ audit, standards, colaboradores = [], readOnly, onC
         <button className="btn ghost" onClick={onClose}>Fechar</button>
         {!readOnly && (
           <button className="btn primary" disabled={!podeConcluir} onClick={() => onSave(itens)}>
-            Concluir diagnóstico{ncCount ? ` · gerar ${ncCount} NC${ncCount > 1 ? "s" : ""}` : ""}
+            {isOPEG
+              ? `Concluir diagnóstico · ${pontos} pts · ${classif}`
+              : `Concluir diagnóstico${ncCount ? ` · gerar ${ncCount} NC${ncCount > 1 ? "s" : ""}` : ""}`}
           </button>
         )}
       </div>

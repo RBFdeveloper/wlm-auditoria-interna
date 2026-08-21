@@ -485,3 +485,11 @@ html,body{overflow-x:hidden}
   .exec-item{grid-template-columns:70px 1fr; grid-template-areas:'ref main' 'act act'}
   .exec-actions{justify-content:flex-start}
 }
+
+.peso-box{display:inline-flex; align-items:center; gap:5px; background:#f4f7fa; border:1px solid var(--card-line); border-radius:8px; padding:3px 8px; font-size:11px; color:var(--dim); font-weight:600; flex-shrink:0}
+.peso-box input{width:46px; border:1px solid var(--card-line); border-radius:6px; padding:3px 6px; font:inherit; font-size:13px; text-align:center; color:var(--brand); font-weight:700; background:#fff}
+.peso-tag{display:inline-flex; align-items:center; background:#eef4f9; color:var(--brand); border:1px solid #d6e4ef; border-radius:20px; padding:2px 9px; font-size:11px; font-weight:700; flex-shrink:0}
+.dept-outro-input{width:100%; margin-top:8px; border:1px solid var(--card-line); border-radius:9px; padding:10px 12px; font:inherit; font-size:14px; outline:none}
+.dept-outro-input:focus{border-color:var(--brand)}
+.res-btn-txt{margin-left:6px; font-size:12.5px; font-weight:600}
+@media(max-width:640px){ .peso-box input{width:40px} .res-btn-txt{display:none} .exec-actions{gap:6px} }
