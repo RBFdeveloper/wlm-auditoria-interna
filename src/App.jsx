@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { LayoutDashboard, ClipboardList, AlertTriangle, BookOpenCheck, Plus, ChevronRight, Building2, Users, LogOut, Contact } from "lucide-react";
+import { LayoutDashboard, ClipboardList, AlertTriangle, BookOpenCheck, Plus, ChevronRight, Building2, Users, LogOut, Contact, Menu, X } from "lucide-react";
 import { LOGO_WLM } from "./constants";
 import { unitById, can, roleLabel, allowedUnits, computeMetrics, initials, titleMap, titleEyebrow } from "./utils";
 import { BrandMark, WlmLogo, TopAccent } from "./ui/common";
@@ -30,6 +30,7 @@ export default function App() {
   const [standards, setStandards] = useState(null);
   const [view, setView] = useState("dashboard");
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileNav, setMobileNav] = useState(false);
   const [audits, setAudits] = useState([]);
   const [ncs, setNcs] = useState([]);
   const [modal, setModal] = useState(null);
@@ -146,8 +147,8 @@ export default function App() {
   const canAudit = can(papel, "audit");
 
   return (
-    <div className="app">
-      
+    <div className={`app ${mobileNav ? "nav-open" : ""}`}>
+      {mobileNav && <div className="nav-backdrop" onClick={() => setMobileNav(false)} />}
 
       {/* ---------------- Sidebar ---------------- */}
       <aside className={`sidebar ${collapsed ? "collapsed" : ""}`}>
@@ -156,6 +157,7 @@ export default function App() {
           <div className="brand-txt">
             <div className="brand-name">Diagnóstico Interno</div>
           </div>
+          <button className="side-close" title="Fechar menu" onClick={() => setMobileNav(false)}><X size={18} /></button>
           <button className="side-toggle" title={collapsed ? "Expandir" : "Recolher"} onClick={() => setCollapsed((c) => !c)}>
             <ChevronRight size={16} className={collapsed ? "" : "rot"} />
           </button>
@@ -163,7 +165,7 @@ export default function App() {
 
         <nav className="nav">
           {navItems.map(([k, label, Icon]) => (
-            <button key={k} className={`nav-item ${view === k ? "active" : ""}`} onClick={() => setView(k)} title={collapsed ? label : ""}>
+            <button key={k} className={`nav-item ${view === k ? "active" : ""}`} onClick={() => { setView(k); setMobileNav(false); }} title={collapsed ? label : ""}>
               <Icon size={18} strokeWidth={2} />
               <span>{label}</span>
               {k === "ncs" && metrics.abertas > 0 && <span className="badge">{metrics.abertas}</span>}
@@ -186,6 +188,7 @@ export default function App() {
         <TopAccent />
         <header className="topbar">
           <div className="topbar-left">
+            <button className="nav-toggle" title="Menu" onClick={() => setMobileNav(true)}><Menu size={20} /></button>
             <div>
               <div className="eyebrow">{titleEyebrow(view)}</div>
               <h1 className="title">{titleMap(view)}</h1>

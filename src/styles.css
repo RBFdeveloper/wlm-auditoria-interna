@@ -60,6 +60,8 @@ html,body{overflow-x:hidden}
 /* Main / topbar */
 .main{flex:1; min-width:0; display:flex; flex-direction:column; margin-left:248px}
 .app:has(.sidebar.collapsed) .main{margin-left:68px}
+.nav-toggle,.side-close{display:none; background:none; border:0; cursor:pointer; color:inherit; padding:6px; align-items:center; justify-content:center}
+.nav-backdrop{display:none}
 .topbar{display:flex; justify-content:space-between; align-items:center; padding:20px 28px;
   background:var(--card); border-bottom:1px solid var(--card-line)}
 .eyebrow{font-family:var(--disp); font-size:12px; font-weight:600; letter-spacing:2px;
@@ -468,7 +470,7 @@ html,body{overflow-x:hidden}
   .std-areas{grid-template-columns:1fr}
   .hero-readouts{grid-template-columns:1fr 1fr}
 }
-@media(max-width:900px){
+@media(min-width:721px) and (max-width:900px){
   .sidebar{width:68px}
   .main{margin-left:68px}
   .sidebar .brand-txt,.sidebar .nav-item span,.sidebar .nav-item .badge,.sidebar .side-user,.sidebar .side-version,.sidebar .logout{display:none}
@@ -478,13 +480,21 @@ html,body{overflow-x:hidden}
   .sidebar .side-foot{justify-content:center; padding:14px 0}
 }
 @media(max-width:720px){
+  .sidebar{width:270px; transform:translateX(-100%); box-shadow:none}
+  .app.nav-open .sidebar{transform:translateX(0); box-shadow:0 0 40px rgba(0,0,0,.4)}
+  .main{margin-left:0}
+  .nav-toggle{display:inline-flex}
+  .side-close{display:inline-flex; margin-left:auto; color:#C6CDD6}
+  .side-toggle{display:none}
+  .app.nav-open .nav-backdrop{display:block; position:fixed; inset:0; background:rgba(18,22,28,.5); z-index:25}
   .hero-readouts{grid-template-columns:1fr 1fr}
   .row-2{grid-template-columns:1fr}
   .topbar{flex-direction:column; align-items:stretch; gap:14px}
-  .topbar-left{flex-direction:column; align-items:stretch; gap:12px}
-  .scope-btn{min-width:0}
+  .topbar-left{align-items:center; gap:12px}
+  .top-actions .btn.primary{flex:1; justify-content:center}
   .exec-item{grid-template-columns:70px 1fr; grid-template-areas:'ref main' 'act act'}
   .exec-actions{justify-content:flex-start}
+  .dash-temas{overflow-x:auto; flex-wrap:nowrap; padding-bottom:4px}
 }
 
 .peso-box{display:inline-flex; align-items:center; gap:5px; background:#f4f7fa; border:1px solid var(--card-line); border-radius:8px; padding:3px 8px; font-size:11px; color:var(--dim); font-weight:600; flex-shrink:0}
@@ -506,8 +516,6 @@ html,body{overflow-x:hidden}
   .card{padding:16px 14px}
 }
 @media(max-width:400px){
-  .sidebar{width:56px}
-  .main{margin-left:56px}
   .content{padding:12px 10px}
 }
 
