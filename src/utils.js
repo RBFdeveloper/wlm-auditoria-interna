@@ -56,7 +56,13 @@ function computeMetrics(audits, ncs) {
   const abertas = ncs.filter((n) => n.status === "aberta").length;
   const trat = ncs.filter((n) => n.status === "em_tratamento").length;
   const resolv = ncs.filter((n) => n.status === "resolvida").length;
+  // OPEG: média de pontuação e contagem por classificação
+  const opeg = concl.filter((a) => a.tipo === "OPEG" && a.pontuacao != null);
+  const opegMedia = opeg.length ? Math.round(opeg.reduce((s, a) => s + a.pontuacao, 0) / opeg.length) : null;
+  const opegClassif = { "Ouro": 0, "Prata": 0, "Bronze": 0, "Sem classificação": 0 };
+  opeg.forEach((a) => { opegClassif[a.classificacao] = (opegClassif[a.classificacao] || 0) + 1; });
   return { taxa, totalAud: audits.length, concluidas: concl.length, abertas, trat, resolv, barData,
+    opegMedia, opegClassif, opegCount: opeg.length,
     pieData: [
       { name: "Aberta", value: abertas, fill: "var(--no)" },
       { name: "Em tratamento", value: trat, fill: "var(--warn)" },
