@@ -516,3 +516,13 @@ html,body{overflow-x:hidden}
 .evid-add:hover{border-color:var(--brand-2); color:var(--brand-2)}
 .evid-add.loading{opacity:.6; pointer-events:none}
 @media(max-width:640px){ .evid-thumb,.evid-add{width:64px; height:50px} }
+
+.classif-txt.classif-ouro{color:#B8860B}
+.classif-txt.classif-prata{color:#7C8B9A}
+.classif-txt.classif-bronze{color:#A0522D}
+.classif-txt.classif-sem-classificacao{color:var(--no)}
+.classif-badge{display:inline-flex; align-items:center; gap:4px; border-radius:20px; padding:3px 11px; font-size:12px; font-weight:700; border:1px solid}
+.classif-badge.ouro{background:#fdf6e3; color:#B8860B; border-color:#efdca6}
+.classif-badge.prata{background:#f1f4f7; color:#6b7c8d; border-color:#d7dee5}
+.classif-badge.bronze{background:#faf0e8; color:#A0522D; border-color:#e8cbb6}
+.classif-badge.sem{background:#fdeaea; color:var(--no); border-color:#f3c9c9}
