@@ -20,7 +20,7 @@ function Dashboard({ m, audits, ncs }) {
           </div>
         </div>
         <div className="hero-readouts">
-          <Readout label="Auditorias" value={m.totalAud} sub={`${m.concluidas} concluídas`} />
+          <Readout label="Diagnósticos" value={m.totalAud} sub={`${m.concluidas} concluídos`} />
           <Readout label="NCs abertas" value={m.abertas} accent="var(--no)" />
           <Readout label="Em tratamento" value={m.trat} accent="var(--warn)" />
           <Readout label="Resolvidas" value={m.resolv} accent="var(--ok)" />
@@ -62,7 +62,7 @@ function Dashboard({ m, audits, ncs }) {
       </section>
 
       <section className="card recent">
-        <SectionTitle>Auditorias recentes</SectionTitle>
+        <SectionTitle>Diagnósticos recentes</SectionTitle>
         <div className="rec-list">
           {recent.map((a) => {
             const u = unitById(a.unidadeId);
@@ -77,7 +77,7 @@ function Dashboard({ m, audits, ncs }) {
               </div>
             );
           })}
-          {recent.length === 0 && <Empty>Nenhuma auditoria ainda.</Empty>}
+          {recent.length === 0 && <Empty>Nenhum diagnóstico ainda.</Empty>}
         </div>
       </section>
     </div>

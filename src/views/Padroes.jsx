@@ -24,7 +24,7 @@ function Padroes({ standards, canEdit, reload, onNewTema, onDelTema, onTemaModo 
   const onEditReq = (r, patch) => run(() => updateRequisito(r.id, patch));
   const onDelReq = (r) => { if (confirm("Remover este requisito?")) run(() => deleteRequisito(r.id)); };
   const onPhoto = (r, file) => { if (file) run(() => uploadFotoRequisito(r.id, file)); };
-  const onDelTemaClick = () => { if (confirm(`Arquivar o tema "${tipo}"? As auditorias já feitas continuam guardadas.`)) { onDelTema(tipo); setTipo(temas.find((t) => t !== tipo) || ""); } };
+  const onDelTemaClick = () => { if (confirm(`Arquivar o tema "${tipo}"? Os diagnósticos já feitos continuam guardados.`)) { onDelTema(tipo); setTipo(temas.find((t) => t !== tipo) || ""); } };
 
   return (
     <div className="card">
@@ -62,8 +62,8 @@ function Padroes({ standards, canEdit, reload, onNewTema, onDelTema, onTemaModo 
         {ehColaborador(std.modo)
           ? <>Neste tema, cada <b>área é uma atividade/rotina</b> (ex.: Abertura de OS, Agendamento) com seus requisitos. Depois, no cadastro do colaborador, você marca quais atividades ele executa.</>
           : std.modo === "departamento"
-          ? <>Neste tema, marque o <b>departamento</b> de cada área. Áreas <b>sem departamento</b> valem para qualquer departamento escolhido na auditoria (ex.: quadro DAILY do OPEG).</>
-          : <>Neste tema, o checklist é <b>geral da casa</b> — todas as áreas entram na auditoria automaticamente.</>}
+          ? <>Neste tema, marque o <b>departamento</b> de cada área. Áreas <b>sem departamento</b> valem para qualquer departamento escolhido no diagnóstico (ex.: quadro DAILY do OPEG).</>
+          : <>Neste tema, o checklist é <b>geral da casa</b> — todas as áreas entram no diagnóstico automaticamente.</>}
       </div>
 
       <div className="std-list">

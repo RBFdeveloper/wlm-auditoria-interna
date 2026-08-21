@@ -78,7 +78,7 @@ function unitStats(unidadeId, audits, ncs) {
 function initials(nome) { return nome.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase(); }
 function today() { return new Date().toISOString().slice(0, 10); }
 function fmtDate(d) { if (!d) return "—"; const [y, m, dd] = d.split("-"); return `${dd}/${m}/${y}`; }
-function titleMap(v) { return { dashboard: "Visão geral", casas: "Casas", auditorias: "Auditorias", ncs: "Não conformidades", padroes: "Padrões", usuarios: "Usuários", colaboradores: "Colaboradores" }[v]; }
+function titleMap(v) { return { dashboard: "Visão geral", casas: "Casas", auditorias: "Diagnósticos", ncs: "Não conformidades", padroes: "Padrões", usuarios: "Usuários", colaboradores: "Colaboradores" }[v]; }
 function titleEyebrow(v) { return { dashboard: "Painel", casas: "Rede WLM", auditorias: "Gestão", ncs: "Tratamento", padroes: "Referência", usuarios: "Acessos", colaboradores: "Cadastro" }[v]; }
 
 export { rawModo, modoDoTema, ehColaborador, modoTag, unitById, unitsOfGrupo, flattenReqs, findReq, can, roleLabel, allowedUnits, escopoLabel, computeMetrics, unitStats, initials, today, fmtDate, titleMap, titleEyebrow };

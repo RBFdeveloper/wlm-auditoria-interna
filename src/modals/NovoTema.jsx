@@ -6,7 +6,7 @@ function NovoTema({ onClose, onCreate }) {
   const codigoOk = /^[A-Za-z0-9]{2,10}$/.test(f.codigo.trim());
   const valido = codigoOk && f.nome.trim();
   return (
-    <Modal title="Novo tema de auditoria" sub="PEG" onClose={onClose}>
+    <Modal title="Novo tema de diagnóstico" sub="PEG" onClose={onClose}>
       <div className="form">
         <div className="row-2">
           <Field label="Sigla / prefixo">
@@ -24,7 +24,7 @@ function NovoTema({ onClose, onCreate }) {
           <input value={f.nome} onChange={(e) => setF({ ...f, nome: e.target.value })} placeholder="Ex.: Diagnóstico de Treinamento Operacional" />
         </Field>
         {f.codigo && !codigoOk && <div className="login-erro">A sigla deve ter de 2 a 10 letras/números, sem espaços.</div>}
-        <div className="form-note">A sigla entra no código das auditorias (ex.: <b>{(f.codigo || "DTO").toUpperCase()}RJ01/26</b>). Depois adicione as áreas, requisitos e fotos.</div>
+        <div className="form-note">A sigla entra no código dos diagnósticos (ex.: <b>{(f.codigo || "DTO").toUpperCase()}RJ01/26</b>). Depois adicione as áreas, requisitos e fotos.</div>
       </div>
       <div className="modal-f">
         <button className="btn ghost" onClick={onClose}>Cancelar</button>

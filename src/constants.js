@@ -36,8 +36,8 @@ CSC_CASAS.forEach((nome) =>
 
 const GRUPOS_ALL = [...GRUPOS.map((g) => ({ id: g.id, nome: g.nome })), { id: "csc", nome: "CSC · Controladoria" }];
 const ROLES = {
-  master:  { label: "Master",             desc: "PEG · acesso total, cria auditorias e usuários" },
-  auditor: { label: "Auditor/Facilitador", desc: "Executa auditorias nas casas do seu acesso" },
+  master:  { label: "Master",             desc: "PEG · acesso total, cria diagnósticos e usuários" },
+  auditor: { label: "Auditor/Facilitador", desc: "Executa diagnósticos nas casas do seu acesso" },
 };
 const PERMS = {
   master:  ["standards", "users", "audit", "treat", "all_houses"],

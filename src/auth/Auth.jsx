@@ -19,7 +19,7 @@ function Login({ onLogged }) {
     <div className="login-wrap">
       <div className="login-card">
         <div className="login-logo"><img src={LOGO_WLM} alt="WLM" /></div>
-        <div className="login-title">Portal de Auditoria Interna</div>
+        <div className="login-title">Portal de Diagnóstico Interno</div>
         <div className="login-sub">Grupo WLM · Scania</div>
 
         <label className="login-field">
@@ -37,7 +37,7 @@ function Login({ onLogged }) {
           {carregando ? "Entrando…" : "Entrar"}
         </button>
       </div>
-      <div className="login-foot">WLM · Auditoria Interna · {APP_VERSION}</div>
+      <div className="login-foot">WLM · Diagnóstico Interno · {APP_VERSION}</div>
     </div>
   );
 }
@@ -83,7 +83,7 @@ function ResetSenha({ onDone, onCancel }) {
         </button>
         <div className="login-hint" style={{ cursor: "pointer" }} onClick={onCancel}>Sair</div>
       </div>
-      <div className="login-foot">WLM · Auditoria Interna · {APP_VERSION}</div>
+      <div className="login-foot">WLM · Diagnóstico Interno · {APP_VERSION}</div>
     </div>
   );
 }

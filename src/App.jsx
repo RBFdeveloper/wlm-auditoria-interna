@@ -137,7 +137,7 @@ export default function App() {
   const navItems = [
     ["dashboard", "Visão geral", LayoutDashboard],
     ["casas", "Casas", Building2],
-    ["auditorias", "Auditorias", ClipboardList],
+    ["auditorias", "Diagnósticos", ClipboardList],
     ["ncs", "Não conformidades", AlertTriangle],
     ["padroes", "Padrões", BookOpenCheck],
     ...(can(papel, "users") ? [["colaboradores", "Colaboradores", Contact], ["usuarios", "Usuários", Users]] : []),
@@ -153,7 +153,7 @@ export default function App() {
         <div className="brand">
           <BrandMark />
           <div className="brand-txt">
-            <div className="brand-name">Auditoria Interna</div>
+            <div className="brand-name">Diagnóstico Interno</div>
           </div>
           <button className="side-toggle" title={collapsed ? "Expandir" : "Recolher"} onClick={() => setCollapsed((c) => !c)}>
             <ChevronRight size={16} className={collapsed ? "" : "rot"} />
@@ -196,7 +196,7 @@ export default function App() {
           <div className="top-actions">
             {canAudit &&
               <button className="btn primary" onClick={() => setModal({ type: "new" })}>
-                <Plus size={16} /> Nova auditoria
+                <Plus size={16} /> Novo diagnóstico
               </button>}
             <WlmLogo />
           </div>

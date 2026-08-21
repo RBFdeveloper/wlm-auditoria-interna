@@ -22,7 +22,7 @@ export function gerarRelatorioPDF({ audit, ncs = [], colaboradores = [], unidade
   // cabeçalho
   if (logo) { try { doc.addImage(logo, "PNG", 40, y - 6, 66, 21); } catch (e) {} }
   doc.setFont("helvetica", "bold"); doc.setFontSize(15); doc.setTextColor(...INK);
-  doc.text("Relatório de Auditoria", W - 40, y + 8, { align: "right" });
+  doc.text("Relatório de Diagnóstico", W - 40, y + 8, { align: "right" });
   y += 24;
   doc.setDrawColor(...WLM); doc.setLineWidth(2.5); doc.line(40, y, W - 40, y); y += 18;
 
@@ -108,9 +108,9 @@ export function gerarRelatorioPDF({ audit, ncs = [], colaboradores = [], unidade
   for (let p = 1; p <= pages; p++) {
     doc.setPage(p);
     doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(150);
-    doc.text(`WLM · Auditoria Interna${audit.codigoFmt ? " · " + audit.codigoFmt : ""}`, 40, H - 20);
+    doc.text(`WLM · Diagnóstico Interno${audit.codigoFmt ? " · " + audit.codigoFmt : ""}`, 40, H - 20);
     doc.text(`Página ${p}/${pages}`, W - 40, H - 20, { align: "right" });
   }
 
-  doc.save(`${(audit.codigoFmt || "auditoria").replace(/\//g, "-")}.pdf`);
+  doc.save(`${(audit.codigoFmt || "diagnostico").replace(/\//g, "-")}.pdf`);
 }

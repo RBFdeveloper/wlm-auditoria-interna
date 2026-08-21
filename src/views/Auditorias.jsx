@@ -52,10 +52,10 @@ function Auditorias({ audits, canAudit, onNew, onExec, onPdf }) {
         </div>
         {temFiltro && <button className="btn ghost sm" onClick={limpar}><X size={14} /> Limpar</button>}
       </div>
-      <div className="filtros-info">{list.length} de {audits.length} auditorias</div>
+      <div className="filtros-info">{list.length} de {audits.length} diagnósticos</div>
 
       {list.length === 0 ? (
-        <Empty>Nenhuma auditoria encontrada.{canAudit && !temFiltro && <> <button className="link" onClick={onNew}>Criar a primeira</button>.</>}</Empty>
+        <Empty>Nenhum diagnóstico encontrado.{canAudit && !temFiltro && <> <button className="link" onClick={onNew}>Criar o primeiro</button>.</>}</Empty>
       ) : (
         <table className="tbl">
           <thead><tr>

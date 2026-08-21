@@ -22,7 +22,7 @@ function Usuarios({ users, onNew }) {
           ))}
         </tbody>
       </table>
-      <div className="hint">Master (PEG): acesso total, cria auditorias, padrões e usuários. Auditor/Facilitador: executa auditorias nas casas do seu acesso. Toda conta nova entra com a senha padrão Peg@2026 e a troca no 1º acesso.</div>
+      <div className="hint">Master (PEG): acesso total, cria diagnósticos, padrões e usuários. Auditor/Facilitador: executa diagnósticos nas casas do seu acesso. Toda conta nova entra com a senha padrão Peg@2026 e a troca no 1º acesso.</div>
     </div>
   );
 }

@@ -129,7 +129,7 @@ function ExecutarAuditoria({ audit, standards, colaboradores = [], readOnly, onC
         <button className="btn ghost" onClick={onClose}>Fechar</button>
         {!readOnly && (
           <button className="btn primary" disabled={!podeConcluir} onClick={() => onSave(itens)}>
-            Concluir auditoria{ncCount ? ` · gerar ${ncCount} NC${ncCount > 1 ? "s" : ""}` : ""}
+            Concluir diagnóstico{ncCount ? ` · gerar ${ncCount} NC${ncCount > 1 ? "s" : ""}` : ""}
           </button>
         )}
       </div>

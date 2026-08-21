@@ -69,7 +69,7 @@ function NovoColaborador({ units = UNITS, standards = {}, colab = null, onClose,
                     </div>
                   </div>
                 ))}
-                <div className="form-note" style={{ marginTop: 6 }}>Marque os processos em que ele deve ser auditado. Ficam salvos e já vêm carregados quando ele entra numa auditoria DTO. Sem marcar nenhum, ele recebe todos.</div>
+                <div className="form-note" style={{ marginTop: 6 }}>Marque os processos em que ele deve ser auditado. Ficam salvos e já vêm carregados quando ele entra num diagnóstico DTO. Sem marcar nenhum, ele recebe todos.</div>
               </>}
         </Field>
       </div>

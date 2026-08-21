@@ -59,9 +59,9 @@ function NovaAuditoria({ onClose, onCreate, scope, units = UNITS, standards, col
   };
 
   return (
-    <Modal title="Nova auditoria" sub="Planejamento" onClose={onClose}>
+    <Modal title="Novo diagnóstico" sub="Planejamento" onClose={onClose}>
       <div className="form">
-        <Field label="Tema da auditoria">
+        <Field label="Tema do diagnóstico">
           <div className="seg full wrap">
             {temas.map((t) => (
               <button key={t} className={f.tipo === t ? "on" : ""} onClick={() => { setF({ ...f, tipo: t }); resetSubjects(); }}>{t}</button>
@@ -113,9 +113,9 @@ function NovaAuditoria({ onClose, onCreate, scope, units = UNITS, standards, col
             {std.areas.length === 0
               ? <div className="form-note">O <b>{f.tipo}</b> ainda não tem atividades/processos cadastrados. Vá em <b>Padrões → {f.tipo}</b> e crie as atividades (ex.: Abertura de OS, Agendamento) com seus requisitos. Depois marque-as em cada colaborador.</div>
               : doHouse.length === 0
-              ? <div className="form-note">Nenhum colaborador cadastrado nesta casa. Cadastre em <b>Colaboradores</b> — a auditoria DTO audita todos de uma vez.</div>
+              ? <div className="form-note">Nenhum colaborador cadastrado nesta casa. Cadastre em <b>Colaboradores</b> — o diagnóstico DTO audita todos de uma vez.</div>
               : <>
-                  <div className="form-note" style={{ marginBottom: 8 }}>A auditoria já traz <b>todos os colaboradores</b> da casa, cada um com as atividades que você marcou no cadastro dele. Desmarque quem não deve entrar.</div>
+                  <div className="form-note" style={{ marginBottom: 8 }}>O diagnóstico já traz <b>todos os colaboradores</b> da casa, cada um com as atividades que você marcou no cadastro dele. Desmarque quem não deve entrar.</div>
                   <div className="colab-pick">
                     {doHouse.map((c) => (
                       <button key={c.id} type="button" className={`colab-chip ${sel.includes(c.id) ? "on" : ""}`} onClick={() => toggle(c.id)}>

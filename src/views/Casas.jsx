@@ -22,7 +22,7 @@ function Casas({ audits, ncs, units = UNITS, siglas = {}, canEdit, onSigla, onOp
         </div>
       </div>
 
-      {canEdit && <div className="hint" style={{ marginTop: 0, marginBottom: 12 }}>A <b>sigla</b> de cada casa entra no código da auditoria (ex.: DTO<b>RJ</b>01/26). Clique na sigla para editar.</div>}
+      {canEdit && <div className="hint" style={{ marginTop: 0, marginBottom: 12 }}>A <b>sigla</b> de cada casa entra no código do diagnóstico (ex.: DTO<b>RJ</b>01/26). Clique na sigla para editar.</div>}
 
       {grupos.map((g) => {
         const us = unitsOfGrupo(g.id).filter((u) => allowedSet.has(u.id) && u.nome.toLowerCase().includes(q.toLowerCase()));
@@ -46,7 +46,7 @@ function Casas({ audits, ncs, units = UNITS, siglas = {}, canEdit, onSigla, onOp
                       </div>
                       <div className="casa-bar"><i style={{ width: `${s.taxa || 0}%`, background: col }} /></div>
                       <div className="casa-foot">
-                        <span>{s.total} audit.</span>
+                        <span>{s.total} diag.</span>
                         {s.abertas > 0
                           ? <span className="casa-nc"><AlertTriangle size={12} /> {s.abertas} NC</span>
                           : <span className="casa-ok"><Check size={12} /> ok</span>}
