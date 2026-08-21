@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { Camera, Eye } from "lucide-react";
+import { Camera, Eye, ImagePlus, X } from "lucide-react";
 import { RESULT_META } from "../constants";
 import { unitById, findReq } from "../utils";
 import { Modal } from "../ui/common";
+import { uploadFotoItem, removeFotoItem } from "../lib/db";
 
 function ExecutarAuditoria({ audit, standards, colaboradores = [], readOnly, onClose, onSave, onDraft }) {
   const [itens, setItens] = useState(audit.itens);
@@ -19,6 +20,22 @@ function ExecutarAuditoria({ audit, standards, colaboradores = [], readOnly, onC
   const [aba, setAba] = useState(subjetos[0] || null);
 
   const set = (i, patch) => setItens((prev) => prev.map((it, idx) => idx === i ? { ...it, ...patch } : it));
+  const [subindo, setSubindo] = useState(null);
+  const subirFoto = async (it, slot, file) => {
+    if (!file) return;
+    setSubindo(`${it.idx}-${slot}`);
+    try {
+      const { path, url } = await uploadFotoItem(it.id, slot, file);
+      set(it.idx, slot === 2 ? { foto2: url, foto2_path: path } : { foto1: url, foto1_path: path });
+    } catch (e) { alert("Não foi possível enviar a foto. Tente novamente."); }
+    setSubindo(null);
+  };
+  const removerFoto = async (it, slot) => {
+    try {
+      await removeFotoItem(it.id, slot);
+      set(it.idx, slot === 2 ? { foto2: null, foto2_path: null } : { foto1: null, foto1_path: null });
+    } catch (e) { alert("Não foi possível remover a foto."); }
+  };
   const isOPEG = audit.tipo === "OPEG";
   const RESULTS = isOPEG ? ["atende", "nao_atende"] : ["conforme", "nao_conforme", "na"];
   const avaliadoR = (r) => isOPEG ? (r === "atende" || r === "nao_atende") : (r === "conforme" || r === "nao_conforme");
@@ -111,6 +128,25 @@ function ExecutarAuditoria({ audit, standards, colaboradores = [], readOnly, onC
                       {isPend && <span className="pend-tag">pendente</span>}
                     </div>
                     {ref.instrucao && <div className="exec-instr"><Eye size={12} /> {ref.instrucao}</div>}
+                    <div className="exec-evid">
+                      {[1, 2].map((slot) => {
+                        const url = slot === 1 ? it.foto1 : it.foto2;
+                        const enviando = subindo === `${it.idx}-${slot}`;
+                        return url ? (
+                          <div key={slot} className="evid-thumb">
+                            <img src={url} alt={`evidência ${slot}`} onClick={() => setZoom(url)} />
+                            {!readOnly && <button className="evid-del" title="Remover foto" onClick={() => removerFoto(it, slot)}><X size={12} /></button>}
+                          </div>
+                        ) : readOnly ? null : (
+                          <label key={slot} className={`evid-add ${enviando ? "loading" : ""}`}>
+                            <ImagePlus size={15} />
+                            <span>{enviando ? "enviando…" : `Foto ${slot}`}</span>
+                            <input type="file" accept="image/*" hidden disabled={enviando}
+                              onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; subirFoto(it, slot, f); }} />
+                          </label>
+                        );
+                      })}
+                    </div>
                     {precisaObs && (
                       <input className={`exec-obs ${it.resultado === "na" ? "na" : ""} ${faltaObs ? "falta" : ""}`}
                         placeholder={it.resultado === "na"

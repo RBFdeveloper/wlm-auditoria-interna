@@ -131,6 +131,22 @@ export async function uploadFotoRequisito(requisitoId, file) {
   return publicFotoUrl(path);
 }
 
+export async function uploadFotoItem(itemId, slot, file) {
+  const ext = (file.name.split(".").pop() || "jpg");
+  const path = `evid/${itemId}-${slot}-${Date.now()}.${ext}`;
+  const { error } = await supabase.storage.from("padroes").upload(path, file, { upsert: true });
+  if (error) throw error;
+  const col = slot === 2 ? "foto2_path" : "foto1_path";
+  const { error: e2 } = await supabase.from("auditoria_itens").update({ [col]: path }).eq("id", itemId);
+  if (e2) throw e2;
+  return { path, url: publicFotoUrl(path) };
+}
+export async function removeFotoItem(itemId, slot) {
+  const col = slot === 2 ? "foto2_path" : "foto1_path";
+  const { error } = await supabase.from("auditoria_itens").update({ [col]: null }).eq("id", itemId);
+  if (error) throw error;
+}
+
 /* ============================ AUDITORIAS ============================ */
 function mapAudit(row) {
   return {
@@ -143,6 +159,9 @@ function mapAudit(row) {
       id: i.id, area: i.area, codigo: i.codigo, requisito: i.requisito,
       resultado: i.resultado, obs: i.obs || "", colaboradorId: i.colaborador_id || null, processo: i.processo || null,
       peso: i.peso ?? 1,
+      foto1_path: i.foto1_path || null, foto2_path: i.foto2_path || null,
+      foto1: i.foto1_path ? publicFotoUrl(i.foto1_path) : null,
+      foto2: i.foto2_path ? publicFotoUrl(i.foto2_path) : null,
     })),
   };
 }
