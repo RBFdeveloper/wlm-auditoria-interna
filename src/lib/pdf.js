@@ -9,7 +9,7 @@ const RED = [214, 69, 69];
 const GREEN = [46, 158, 107];
 
 const fmt = (d) => { if (!d) return "—"; const [y, m, dd] = String(d).split("-"); return `${dd}/${m}/${y}`; };
-const resLabel = { conforme: "Conforme", nao_conforme: "Não conforme", na: "N/A", pendente: "Pendente" };
+const resLabel = { conforme: "Conforme", nao_conforme: "Não conforme", na: "N/A", pendente: "Pendente", atende: "Atende", nao_atende: "Não atende" };
 const sevLabel = { baixa: "Baixa", media: "Média", alta: "Alta" };
 const stLabel = { aberta: "Aberta", em_tratamento: "Em tratamento", resolvida: "Resolvida" };
 
@@ -39,7 +39,9 @@ export function gerarRelatorioPDF({ audit, ncs = [], colaboradores = [], unidade
       ["Data", fmt(audit.data), "Auditor", audit.auditor || "—"],
       ...(audit.departamento || audit.responsavelNome
         ? [["Departamento", audit.departamento || "—", "Responsável", audit.responsavelNome || "—"]] : []),
-      ["Conformidade", `${taxa}%`, "Não conformidades", String(ncCount)],
+      ...(audit.tipo === "OPEG"
+        ? [["Pontuação", audit.pontuacao != null ? `${audit.pontuacao} pts` : "—", "Classificação", audit.classificacao || "—"]]
+        : [["Conformidade", `${taxa}%`, "Não conformidades", String(ncCount)]]),
     ],
     styles: { fontSize: 9.5, cellPadding: 2.5 },
     columnStyles: {
@@ -70,8 +72,8 @@ export function gerarRelatorioPDF({ audit, ncs = [], colaboradores = [], unidade
       columnStyles: { 0: { cellWidth: 90 }, 1: { cellWidth: 32 }, 2: { cellWidth: 165 }, 3: { cellWidth: 70 }, 4: { cellWidth: 120 } },
       didParseCell: (d) => {
         if (d.section === "body" && d.column.index === 3) {
-          if (d.cell.raw === "Não conforme") d.cell.styles.textColor = RED;
-          else if (d.cell.raw === "Conforme") d.cell.styles.textColor = GREEN;
+          if (d.cell.raw === "Não conforme" || d.cell.raw === "Não atende") d.cell.styles.textColor = RED;
+          else if (d.cell.raw === "Conforme" || d.cell.raw === "Atende") d.cell.styles.textColor = GREEN;
         }
       },
     });
