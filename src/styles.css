@@ -16,8 +16,8 @@ html,body{overflow-x:hidden}
   background:var(--surface); font-size:14px; -webkit-font-smoothing:antialiased}
 
 /* Sidebar */
-.sidebar{width:248px; flex-shrink:0; background:var(--ink); color:#C6CDD6;
-  display:flex; flex-direction:column; position:sticky; top:0; height:100vh; align-self:flex-start; overflow-y:auto; transition:width .18s ease}
+.sidebar{width:248px; flex-shrink:0; background:var(--ink); color:#C6CDD6; z-index:30;
+  display:flex; flex-direction:column; position:fixed; top:0; left:0; height:100vh; overflow-y:auto; transition:width .18s ease}
 .sidebar.collapsed{width:68px}
 .side-toggle{background:transparent; border:0; color:#7C8794; cursor:pointer; padding:6px; border-radius:7px; margin-left:auto; flex-shrink:0}
 .side-toggle:hover{background:var(--ink-2); color:#E7ECF1}
@@ -58,7 +58,8 @@ html,body{overflow-x:hidden}
 .urole{font-size:11px; color:#7C8794}
 
 /* Main / topbar */
-.main{flex:1; min-width:0; display:flex; flex-direction:column}
+.main{flex:1; min-width:0; display:flex; flex-direction:column; margin-left:248px}
+.app:has(.sidebar.collapsed) .main{margin-left:68px}
 .topbar{display:flex; justify-content:space-between; align-items:center; padding:20px 28px;
   background:var(--card); border-bottom:1px solid var(--card-line)}
 .eyebrow{font-family:var(--disp); font-size:12px; font-weight:600; letter-spacing:2px;
@@ -469,6 +470,7 @@ html,body{overflow-x:hidden}
 }
 @media(max-width:900px){
   .sidebar{width:68px}
+  .main{margin-left:68px}
   .sidebar .brand-txt,.sidebar .nav-item span,.sidebar .nav-item .badge,.sidebar .side-user,.sidebar .side-version,.sidebar .logout{display:none}
   .sidebar .brand{flex-direction:column; gap:12px; padding:18px 0}
   .sidebar .nav-item{justify-content:center; padding:11px 0}
@@ -505,6 +507,7 @@ html,body{overflow-x:hidden}
 }
 @media(max-width:400px){
   .sidebar{width:56px}
+  .main{margin-left:56px}
   .content{padding:12px 10px}
 }
 
