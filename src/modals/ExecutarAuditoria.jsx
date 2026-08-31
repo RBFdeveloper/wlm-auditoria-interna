@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { Camera, Eye, ImagePlus, X } from "lucide-react";
-import { RESULT_META } from "../constants";
+import { RESULT_META, UNITS } from "../constants";
 import { unitById, findReq } from "../utils";
 import { Modal } from "../ui/common";
 import { uploadFotoItem, removeFotoItem } from "../lib/db";
 
-function ExecutarAuditoria({ audit, standards, colaboradores = [], readOnly, onClose, onSave, onDraft }) {
+function ExecutarAuditoria({ audit, standards, colaboradores = [], units = UNITS, readOnly, onClose, onSave, onDraft }) {
   const [itens, setItens] = useState(audit.itens);
   const [zoom, setZoom] = useState(null);
   const porColaborador = audit.modo === "colaborador" || audit.modo === "funcionario";
@@ -69,7 +69,7 @@ function ExecutarAuditoria({ audit, standards, colaboradores = [], readOnly, onC
     return { feitos, total: its.length, ok: feitos === its.length && its.length > 0 };
   };
 
-  const u = unitById(audit.unidadeId);
+  const u = unitById(audit.unidadeId, units);
   const modoLabel = porColaborador ? "por colaborador" : porProcesso ? "por processo"
     : audit.modo === "departamento" ? `depto: ${audit.departamento || "—"}` : audit.setor;
 

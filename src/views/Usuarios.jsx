@@ -1,8 +1,9 @@
 import React from "react";
 import { Plus, Pencil } from "lucide-react";
+import { UNITS, GRUPOS_ALL } from "../constants";
 import { roleLabel, escopoLabel, initials } from "../utils";
 
-function Usuarios({ users, onNew, onEdit }) {
+function Usuarios({ users, units = UNITS, grupos = GRUPOS_ALL, onNew, onEdit }) {
   return (
     <div className="card">
       <div className="toolbar">
@@ -17,7 +18,7 @@ function Usuarios({ users, onNew, onEdit }) {
               <td className="strong"><span className="u-ava">{initials(u.nome)}</span>{u.nome}</td>
               <td className="dim">{u.email}</td>
               <td><span className="role-pill" data-r={u.papel}>{roleLabel(u.papel)}</span></td>
-              <td className="dim">{escopoLabel(u.escopo)}</td>
+              <td className="dim">{escopoLabel(u.escopo, units, grupos)}</td>
               <td>
                 <div className="row-actions">
                   <button className="btn ghost sm" title="Editar" onClick={() => onEdit(u)}><Pencil size={13} /> Editar</button>

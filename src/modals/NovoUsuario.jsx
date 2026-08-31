@@ -4,13 +4,13 @@ import { UNITS, GRUPOS_ALL, ROLES } from "../constants";
 import { unitsOfGrupo } from "../utils";
 import { Modal, Field } from "../ui/common";
 
-function NovoUsuario({ user = null, onClose, onCreate, onEdit }) {
+function NovoUsuario({ user = null, units = UNITS, grupos: gruposAll = GRUPOS_ALL, onClose, onCreate, onEdit }) {
   const editando = !!user;
   const [f, setF] = useState({
     nome: user?.nome || "", email: user?.email || "", papel: user?.papel || "auditor",
     escopoTipo: !user || user.escopo === "all" ? "all" : user.escopo?.grupo ? "grupo" : "unidade",
-    grupo: user?.escopo?.grupo || GRUPOS_ALL[0].id,
-    unidade: user?.escopo?.unidades?.[0] || UNITS[0].id,
+    grupo: user?.escopo?.grupo || gruposAll[0].id,
+    unidade: user?.escopo?.unidades?.[0] || units[0].id,
   });
   const [respUnidades, setRespUnidades] = useState(user?.responsavelUnidades || []);
   const toggleResp = (id) => setRespUnidades((s) => s.includes(id) ? s.filter((x) => x !== id) : [...s, id]);
@@ -44,16 +44,16 @@ function NovoUsuario({ user = null, onClose, onCreate, onEdit }) {
             {f.escopoTipo === "grupo" && (
               <Field label="Grupo" icon={Building2}>
                 <select value={f.grupo} onChange={(e) => setF({ ...f, grupo: e.target.value })}>
-                  {GRUPOS_ALL.map((g) => <option key={g.id} value={g.id}>{g.nome}</option>)}
+                  {gruposAll.map((g) => <option key={g.id} value={g.id}>{g.nome}</option>)}
                 </select>
               </Field>
             )}
             {f.escopoTipo === "unidade" && (
               <Field label="Casa" icon={Building2}>
                 <select value={f.unidade} onChange={(e) => setF({ ...f, unidade: e.target.value })}>
-                  {GRUPOS_ALL.map((g) => (
+                  {gruposAll.map((g) => (
                     <optgroup key={g.id} label={g.nome}>
-                      {unitsOfGrupo(g.id).map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
+                      {unitsOfGrupo(g.id, units).map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
                     </optgroup>
                   ))}
                 </select>
@@ -62,11 +62,11 @@ function NovoUsuario({ user = null, onClose, onCreate, onEdit }) {
           </>
         )}
         <Field label={`Responsável pelas casas (${respUnidades.length})`} icon={ShieldCheck}>
-          {GRUPOS_ALL.map((g) => (
+          {gruposAll.map((g) => (
             <div key={g.id} className="ativ-grupo">
               <div className="ativ-grupo-h">{g.nome}</div>
               <div className="ativ-pick">
-                {unitsOfGrupo(g.id).map((u) => (
+                {unitsOfGrupo(g.id, units).map((u) => (
                   <button key={u.id} type="button" className={`ativ-chip ${respUnidades.includes(u.id) ? "on" : ""}`}
                     onClick={() => toggleResp(u.id)}>
                     {respUnidades.includes(u.id) && <Check size={11} />} {u.nome}

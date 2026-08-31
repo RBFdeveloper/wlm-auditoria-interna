@@ -91,6 +91,26 @@ export async function addArea(tipo, nome, ordem = 0) {
   if (error) throw error; return data;
 }
 
+/* ---------- Estrutura da rede (grupos/unidades) ---------- */
+export async function listGrupos() {
+  const { data, error } = await supabase.from("grupos").select("id, nome").order("nome");
+  if (error) throw error;
+  return (data || []).map((g) => ({ id: g.id, nome: g.nome }));
+}
+export async function listUnidades() {
+  const [{ data: grp, error: e1 }, { data: uni, error: e2 }] = await Promise.all([
+    supabase.from("grupos").select("id, nome"),
+    supabase.from("unidades").select("id, nome, grupo_id, tipo, sigla").order("nome"),
+  ]);
+  if (e1) throw e1; if (e2) throw e2;
+  const nomeDoGrupo = Object.fromEntries((grp || []).map((g) => [g.id, g.nome]));
+  return (uni || []).map((u) => ({
+    id: u.id, nome: u.nome, grupoId: u.grupo_id,
+    grupoNome: u.tipo === "csc" ? "CSC · Controladoria" : (nomeDoGrupo[u.grupo_id] || u.grupo_id),
+    tipo: u.tipo, sigla: u.sigla || "",
+  }));
+}
+
 /* ---------- Siglas das casas (para o código) ---------- */
 export async function listSiglas() {
   const { data, error } = await supabase.from("unidades").select("id, sigla");

@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { ClipboardList, FileText, Building2, Contact, ShieldCheck } from "lucide-react";
-import { NC_STATUS, SEV } from "../constants";
+import { NC_STATUS, SEV, UNITS } from "../constants";
 import { unitById, fmtDate } from "../utils";
 import { Empty, StatusPill } from "../ui/common";
 
-function NaoConformidades({ ncs, audits = [], responsaveis = [], canTreat, onTreat }) {
+function NaoConformidades({ ncs, audits = [], responsaveis = [], units = UNITS, canTreat, onTreat }) {
   const [fst, setFst] = useState("todos");
   const [fcasa, setFcasa] = useState("todas");
   const audById = (id) => audits.find((a) => a.id === id);
@@ -31,7 +31,7 @@ function NaoConformidades({ ncs, audits = [], responsaveis = [], canTreat, onTre
         {casasNC.length > 1 && (
           <select className="mini-select" value={fcasa} onChange={(e) => setFcasa(e.target.value)}>
             <option value="todas">Todas as casas</option>
-            {casasNC.map((id) => <option key={id} value={id}>{unitById(id)?.nome || id}</option>)}
+            {casasNC.map((id) => <option key={id} value={id}>{unitById(id, units)?.nome || id}</option>)}
           </select>
         )}
       </div>
@@ -42,7 +42,7 @@ function NaoConformidades({ ncs, audits = [], responsaveis = [], canTreat, onTre
         <div className="nc-list">
           {list.map((n) => {
             const a = audById(n.auditoriaId);
-            const u = a && unitById(a.unidadeId);
+            const u = a && unitById(a.unidadeId, units);
             return (
               <div key={n.id} className="nc-item">
                 <div className="nc-left">

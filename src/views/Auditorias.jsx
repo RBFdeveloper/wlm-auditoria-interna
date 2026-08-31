@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { Search, X, ChevronRight, FileText } from "lucide-react";
-import { AUD_STATUS } from "../constants";
+import { AUD_STATUS, UNITS } from "../constants";
 import { unitById, fmtDate } from "../utils";
 import { Empty, StatusPill } from "../ui/common";
 
-function Auditorias({ audits, canAudit, onNew, onExec, onPdf }) {
+function Auditorias({ audits, canAudit, units = UNITS, onNew, onExec, onPdf }) {
   const [ftipo, setFtipo] = useState("todos");
   const [fstatus, setFstatus] = useState("todos");
   const [q, setQ] = useState("");
@@ -13,7 +13,7 @@ function Auditorias({ audits, canAudit, onNew, onExec, onPdf }) {
 
   const temasDisp = [...new Set(audits.map((a) => a.tipo))];
   const list = audits.filter((a) => {
-    const u = unitById(a.unidadeId);
+    const u = unitById(a.unidadeId, units);
     const texto = q.toLowerCase();
     const buscaOk = !texto ||
       (a.codigoFmt || "").toLowerCase().includes(texto) ||
@@ -69,7 +69,7 @@ function Auditorias({ audits, canAudit, onNew, onExec, onPdf }) {
               const taxa = av.length ? Math.round((ok / av.length) * 100) : null;
               const isOPEG = a.tipo === "OPEG";
               const classifCls = { "Ouro": "ouro", "Prata": "prata", "Bronze": "bronze", "Sem classificação": "sem" }[a.classificacao] || "sem";
-              const u = unitById(a.unidadeId);
+              const u = unitById(a.unidadeId, units);
               return (
                 <tr key={a.id}>
                   <td className="cod-cell">{a.codigoFmt || "—"}</td>

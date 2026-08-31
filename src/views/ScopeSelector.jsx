@@ -3,19 +3,19 @@ import { ChevronRight, ShieldCheck, Building2 } from "lucide-react";
 import { UNITS, GRUPOS_ALL } from "../constants";
 import { unitById, unitsOfGrupo } from "../utils";
 
-function ScopeSelector({ scope, onChange, units = UNITS }) {
+function ScopeSelector({ scope, onChange, units = UNITS, grupos: gruposAll = GRUPOS_ALL }) {
   const [open, setOpen] = useState(false);
   const [exp, setExp] = useState(null); // grupo expandido
   const allowedSet = new Set(units.map((u) => u.id));
-  const grupos = GRUPOS_ALL.filter((g) => unitsOfGrupo(g.id).some((u) => allowedSet.has(u.id)));
-  const unitsG = (gid) => unitsOfGrupo(gid).filter((u) => allowedSet.has(u.id));
+  const grupos = gruposAll.filter((g) => unitsOfGrupo(g.id, units).some((u) => allowedSet.has(u.id)));
+  const unitsG = (gid) => unitsOfGrupo(gid, units).filter((u) => allowedSet.has(u.id));
   const total = units.length;
   const label = scope.level === "rede" ? "Rede · minhas casas"
-    : scope.level === "grupo" ? (GRUPOS_ALL.find((g) => g.id === scope.id)?.nome || "Grupo")
-    : (unitById(scope.id)?.nome || "Casa");
+    : scope.level === "grupo" ? (gruposAll.find((g) => g.id === scope.id)?.nome || "Grupo")
+    : (unitById(scope.id, units)?.nome || "Casa");
   const sub = scope.level === "rede" ? `${total} casas`
     : scope.level === "grupo" ? `${unitsG(scope.id).length} casas`
-    : (unitById(scope.id)?.grupoNome || "");
+    : (unitById(scope.id, units)?.grupoNome || "");
   const pick = (s) => { onChange(s); setOpen(false); };
   return (
     <div className="scope">

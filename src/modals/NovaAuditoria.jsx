@@ -4,10 +4,10 @@ import { DEPARTAMENTOS, UNITS, GRUPOS_ALL } from "../constants";
 import { modoDoTema, unitsOfGrupo, today } from "../utils";
 import { Modal, Field } from "../ui/common";
 
-function NovaAuditoria({ onClose, onCreate, scope, units = UNITS, standards, colaboradores = [], siglas = {} }) {
+function NovaAuditoria({ onClose, onCreate, scope, units = UNITS, grupos: gruposAll = GRUPOS_ALL, standards, colaboradores = [], siglas = {} }) {
   const temas = Object.keys(standards);
   const allowedSet = new Set(units.map((u) => u.id));
-  const grupos = GRUPOS_ALL.filter((g) => unitsOfGrupo(g.id).some((u) => allowedSet.has(u.id)));
+  const grupos = gruposAll.filter((g) => unitsOfGrupo(g.id, units).some((u) => allowedSet.has(u.id)));
   const defaultUnit = scope?.level === "unidade" ? scope.id : units[0]?.id;
   const [f, setF] = useState({ tipo: temas[0] || "DOS", unidadeId: defaultUnit, data: today() });
   const [sel, setSel] = useState([]);        // colaboradores (modo colaborador)
@@ -83,7 +83,7 @@ function NovaAuditoria({ onClose, onCreate, scope, units = UNITS, standards, col
           <select value={f.unidadeId} onChange={(e) => { setF({ ...f, unidadeId: e.target.value }); resetSubjects(); }}>
             {grupos.map((g) => (
               <optgroup key={g.id} label={g.nome}>
-                {unitsOfGrupo(g.id).filter((u) => allowedSet.has(u.id)).map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
+                {unitsOfGrupo(g.id, units).filter((u) => allowedSet.has(u.id)).map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
               </optgroup>
             ))}
           </select>

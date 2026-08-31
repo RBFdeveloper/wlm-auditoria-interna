@@ -37,7 +37,7 @@ function Colaboradores({ colaboradores, units = UNITS, onNew, onEdit, onDel }) {
           <thead><tr><th>Nome</th><th>Cargo</th><th>Departamento</th><th>Casa</th><th></th></tr></thead>
           <tbody>
             {list.map((c) => {
-              const u = unitById(c.unidadeId);
+              const u = unitById(c.unidadeId, units);
               return (
                 <tr key={c.id}>
                   <td className="strong"><span className="u-ava">{initials(c.nome)}</span>{c.nome}

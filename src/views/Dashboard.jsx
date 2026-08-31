@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, PieChart, Pie, Tooltip } from "recharts";
-import { AUD_STATUS } from "../constants";
+import { AUD_STATUS, UNITS } from "../constants";
 import { unitById, fmtDate, computeMetrics } from "../utils";
 import { SectionTitle, Empty, StatusPill } from "../ui/common";
 
-function Dashboard({ m, audits, ncs }) {
+function Dashboard({ m, audits, ncs, units = UNITS }) {
   const temas = ["Todos", ...Array.from(new Set(audits.map((a) => a.tipo)))];
   const [tema, setTema] = useState("Todos");
   const fa = tema === "Todos" ? audits : audits.filter((a) => a.tipo === tema);
@@ -116,7 +116,7 @@ function Dashboard({ m, audits, ncs }) {
           <SectionTitle>Diagnósticos recentes</SectionTitle>
           <div className="rec-list">
             {recent.map((a) => {
-              const u = unitById(a.unidadeId);
+              const u = unitById(a.unidadeId, units);
               return (
                 <div key={a.id} className="rec-row">
                   <span className="tag-tipo" data-t={a.tipo}>{a.tipo}</span>

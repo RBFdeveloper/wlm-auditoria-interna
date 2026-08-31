@@ -3,11 +3,11 @@ import { AlertTriangle, Search, Check } from "lucide-react";
 import { UNITS, GRUPOS_ALL } from "../constants";
 import { unitsOfGrupo, unitStats } from "../utils";
 
-function Casas({ audits, ncs, units = UNITS, siglas = {}, canEdit, onSigla, onOpen }) {
+function Casas({ audits, ncs, units = UNITS, grupos: gruposAll = GRUPOS_ALL, siglas = {}, canEdit, onSigla, onOpen }) {
   const [tipo, setTipo] = useState("todas"); // todas | concessionaria | csc
   const [q, setQ] = useState("");
   const allowedSet = new Set(units.map((u) => u.id));
-  const grupos = GRUPOS_ALL.filter((g) => tipo === "csc" ? g.id === "csc" : tipo === "concessionaria" ? g.id !== "csc" : true);
+  const grupos = gruposAll.filter((g) => tipo === "csc" ? g.id === "csc" : tipo === "concessionaria" ? g.id !== "csc" : true);
   return (
     <div className="card">
       <div className="toolbar">
@@ -25,7 +25,7 @@ function Casas({ audits, ncs, units = UNITS, siglas = {}, canEdit, onSigla, onOp
       {canEdit && <div className="hint" style={{ marginTop: 0, marginBottom: 12 }}>A <b>sigla</b> de cada casa entra no código do diagnóstico (ex.: DTO<b>RJ</b>01/26). Clique na sigla para editar.</div>}
 
       {grupos.map((g) => {
-        const us = unitsOfGrupo(g.id).filter((u) => allowedSet.has(u.id) && u.nome.toLowerCase().includes(q.toLowerCase()));
+        const us = unitsOfGrupo(g.id, units).filter((u) => allowedSet.has(u.id) && u.nome.toLowerCase().includes(q.toLowerCase()));
         if (!us.length) return null;
         return (
           <div key={g.id} className="grupo-block">

@@ -4,10 +4,10 @@ import { DEPARTAMENTOS, CARGOS, UNITS, GRUPOS_ALL } from "../constants";
 import { ehColaborador, unitsOfGrupo } from "../utils";
 import { Modal, Field } from "../ui/common";
 
-function NovoColaborador({ units = UNITS, standards = {}, colab = null, onClose, onCreate, onEdit }) {
+function NovoColaborador({ units = UNITS, grupos: gruposAll = GRUPOS_ALL, standards = {}, colab = null, onClose, onCreate, onEdit }) {
   const editando = !!colab;
   const allowedSet = new Set(units.map((u) => u.id));
-  const grupos = GRUPOS_ALL.filter((g) => unitsOfGrupo(g.id).some((u) => allowedSet.has(u.id)));
+  const grupos = gruposAll.filter((g) => unitsOfGrupo(g.id, units).some((u) => allowedSet.has(u.id)));
   const [f, setF] = useState({
     nome: colab?.nome || "", cargo: colab?.cargo || CARGOS[0],
     departamento: colab?.departamento || DEPARTAMENTOS[0], unidadeId: colab?.unidadeId || units[0]?.id,
@@ -47,7 +47,7 @@ function NovoColaborador({ units = UNITS, standards = {}, colab = null, onClose,
           <select value={f.unidadeId} onChange={(e) => setF({ ...f, unidadeId: e.target.value })}>
             {grupos.map((g) => (
               <optgroup key={g.id} label={g.nome}>
-                {unitsOfGrupo(g.id).filter((u) => allowedSet.has(u.id)).map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
+                {unitsOfGrupo(g.id, units).filter((u) => allowedSet.has(u.id)).map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
               </optgroup>
             ))}
           </select>

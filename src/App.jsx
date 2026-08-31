@@ -1,9 +1,9 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { LayoutDashboard, ClipboardList, AlertTriangle, BookOpenCheck, Plus, ChevronRight, Building2, Users, LogOut, Contact, Menu, X } from "lucide-react";
-import { LOGO_WLM } from "./constants";
-import { unitById, can, roleLabel, allowedUnits, computeMetrics, initials, titleMap, titleEyebrow } from "./utils";
+import { UNITS, GRUPOS_ALL, LOGO_WLM } from "./constants";
+import { unitById, can, roleLabel, allowedUnits, gruposParaExibicao, computeMetrics, initials, titleMap, titleEyebrow } from "./utils";
 import { BrandMark, WlmLogo, TopAccent } from "./ui/common";
-import { auth, listStandards, listAuditorias, listNCs, listUsuarios, listResponsaveis, createAuditoria, saveExecucao, saveRascunho, tratarNC, criarUsuario, atualizarUsuario, listColaboradores, createColaborador, updateColaborador, deleteColaborador, createTema, deleteTema, updateTemaModo, listSiglas, updateSigla } from "./lib/db";
+import { auth, listStandards, listAuditorias, listNCs, listUsuarios, listResponsaveis, listGrupos, listUnidades, createAuditoria, saveExecucao, saveRascunho, tratarNC, criarUsuario, atualizarUsuario, listColaboradores, createColaborador, updateColaborador, deleteColaborador, createTema, deleteTema, updateTemaModo, listSiglas, updateSigla } from "./lib/db";
 import { gerarRelatorioPDF } from "./lib/pdf";
 import { Dashboard } from "./views/Dashboard";
 import { Auditorias } from "./views/Auditorias";
@@ -26,6 +26,9 @@ export default function App() {
   const [authReady, setAuthReady] = useState(false);
   const [users, setUsers] = useState([]);
   const [responsaveis, setResponsaveis] = useState([]);
+  // grupos/unidades: fallback nas constantes até o banco responder (evita quebrar a 1ª renderização)
+  const [gruposReais, setGruposReais] = useState(GRUPOS_ALL.filter((g) => g.id !== "csc"));
+  const [unidades, setUnidades] = useState(UNITS);
   const [colaboradores, setColaboradores] = useState([]);
   const [siglas, setSiglas] = useState({});
   const [standards, setStandards] = useState(null);
@@ -51,17 +54,19 @@ export default function App() {
   }, []);
 
   const papel = user?.papel;
-  const allowed = useMemo(() => allowedUnits(user), [user]);
+  const grupos = useMemo(() => gruposParaExibicao(gruposReais, unidades), [gruposReais, unidades]);
+  const allowed = useMemo(() => allowedUnits(user, unidades), [user, unidades]);
   const allowedSet = useMemo(() => new Set(allowed.map((u) => u.id)), [allowed]);
 
-  // carrega os dados do banco (padrões, auditorias, NCs, usuários)
+  // carrega os dados do banco (padrões, auditorias, NCs, usuários, rede de casas)
   async function carregar() {
     setLoading(true); setErro("");
     try {
-      const tasks = [listStandards(), listAuditorias(), listNCs(), listColaboradores(), listSiglas(), listResponsaveis()];
+      const tasks = [listStandards(), listAuditorias(), listNCs(), listColaboradores(), listSiglas(), listResponsaveis(), listGrupos(), listUnidades()];
       if (can(user?.papel, "users")) tasks.push(listUsuarios());
-      const [s, a, n, col, sg, resp, us] = await Promise.all(tasks);
+      const [s, a, n, col, sg, resp, grp, uni, us] = await Promise.all(tasks);
       setStandards(s); setAudits(a); setNcs(n); setColaboradores(col); setSiglas(sg); setResponsaveis(resp);
+      setGruposReais(grp); setUnidades(uni);
       if (us) setUsers(us);
     } catch (e) {
       setErro(e.message || "Falha ao carregar dados.");
@@ -69,7 +74,10 @@ export default function App() {
   }
   useEffect(() => {
     if (user) { setView("dashboard"); setScope({ level: "rede", id: null }); carregar(); }
-    else { setStandards(null); setAudits([]); setNcs([]); setUsers([]); setResponsaveis([]); setColaboradores([]); setSiglas({}); }
+    else {
+      setStandards(null); setAudits([]); setNcs([]); setUsers([]); setResponsaveis([]); setColaboradores([]); setSiglas({});
+      setGruposReais(GRUPOS_ALL.filter((g) => g.id !== "csc")); setUnidades(UNITS);
+    }
     // depende só do ID: troca de aba (refresh de token) não recarrega nem reseta a tela
     // eslint-disable-next-line
   }, [user?.id]);
@@ -114,7 +122,7 @@ export default function App() {
     [audits, allowedSet, papel]);
   const inScope = (a) => {
     if (scope.level === "rede") return true;
-    const u = unitById(a.unidadeId);
+    const u = unitById(a.unidadeId, unidades);
     if (!u) return false;
     if (scope.level === "grupo") return u.grupoId === scope.id;
     return a.unidadeId === scope.id;
@@ -197,7 +205,7 @@ export default function App() {
               <h1 className="title">{titleMap(view)}</h1>
             </div>
             {view !== "usuarios" && view !== "padroes" &&
-              <ScopeSelector scope={scope} onChange={setScope} units={allowed} />}
+              <ScopeSelector scope={scope} onChange={setScope} units={allowed} grupos={grupos} />}
           </div>
           <div className="top-actions">
             {canAudit &&
@@ -211,20 +219,20 @@ export default function App() {
         <div className="content">
           {erro && <div className="err-banner">⚠ {erro} <button onClick={carregar}>tentar de novo</button></div>}
           {loading && !standards && <div className="boot inline">Carregando dados do Supabase…</div>}
-          {view === "dashboard" && <Dashboard m={metrics} audits={scopedAudits} ncs={scopedNcs} />}
+          {view === "dashboard" && <Dashboard m={metrics} audits={scopedAudits} ncs={scopedNcs} units={unidades} />}
           {view === "casas" && (
-            <Casas audits={baseAudits} ncs={ncs} units={allowed} siglas={siglas}
+            <Casas audits={baseAudits} ncs={ncs} units={allowed} grupos={grupos} siglas={siglas}
               canEdit={can(papel, "standards")} onSigla={(id, s) => handlers.setSigla(id, s)}
               onOpen={(unidadeId) => { setScope({ level: "unidade", id: unidadeId }); setView("dashboard"); }} />
           )}
           {view === "auditorias" && (
-            <Auditorias audits={scopedAudits} canAudit={canAudit}
+            <Auditorias audits={scopedAudits} canAudit={canAudit} units={unidades}
               onNew={() => setModal({ type: "new" })}
               onExec={(id) => setModal({ type: "exec", id })}
-              onPdf={(a) => gerarRelatorioPDF({ audit: a, ncs, colaboradores, unidadeNome: unitById(a.unidadeId)?.nome || "—", logo: LOGO_WLM })} />
+              onPdf={(a) => gerarRelatorioPDF({ audit: a, ncs, colaboradores, unidadeNome: unitById(a.unidadeId, unidades)?.nome || "—", logo: LOGO_WLM })} />
           )}
           {view === "ncs" && (
-            <NaoConformidades ncs={scopedNcs} audits={audits} responsaveis={responsaveis} canTreat={can(papel, "treat")}
+            <NaoConformidades ncs={scopedNcs} audits={audits} responsaveis={responsaveis} units={unidades} canTreat={can(papel, "treat")}
               onTreat={(id) => setModal({ type: "treat", id })} />
           )}
           {view === "padroes" && standards && (
@@ -233,7 +241,7 @@ export default function App() {
               onTemaModo={(c, m) => handlers.setTemaModo(c, m)} />
           )}
           {view === "usuarios" && can(papel, "users") && (
-            <Usuarios users={users} onNew={() => setModal({ type: "user" })}
+            <Usuarios users={users} units={unidades} grupos={grupos} onNew={() => setModal({ type: "user" })}
               onEdit={(u) => setModal({ type: "user", user: u })} />
           )}
           {view === "colaboradores" && can(papel, "users") && (
@@ -247,12 +255,12 @@ export default function App() {
 
       {/* ---------------- Modais ---------------- */}
       {modal?.type === "new" && (
-        <NovaAuditoria scope={scope} units={allowed} standards={standards} colaboradores={colaboradores} siglas={siglas}
+        <NovaAuditoria scope={scope} units={allowed} grupos={grupos} standards={standards} colaboradores={colaboradores} siglas={siglas}
           onClose={() => setModal(null)}
           onCreate={async (p) => { const id = await handlers.createAudit(p); setModal({ type: "exec", id }); }} />
       )}
       {modal?.type === "exec" && auditById(modal.id) && (
-        <ExecutarAuditoria audit={auditById(modal.id)} standards={standards} colaboradores={colaboradores} readOnly={!canAudit}
+        <ExecutarAuditoria audit={auditById(modal.id)} standards={standards} colaboradores={colaboradores} units={unidades} readOnly={!canAudit}
           onClose={() => setModal(null)}
           onSave={async (itens) => {
             const a = auditById(modal.id);
@@ -267,12 +275,12 @@ export default function App() {
           onSave={async (p) => { await handlers.treatNc(modal.id, p); setModal(null); }} />
       )}
       {modal?.type === "user" && (
-        <NovoUsuario user={modal.user} onClose={() => setModal(null)}
+        <NovoUsuario user={modal.user} units={unidades} grupos={grupos} onClose={() => setModal(null)}
           onCreate={async (u) => { await handlers.createUser(u); setModal(null); }}
           onEdit={async (id, u) => { await handlers.editUser(id, u); setModal(null); }} />
       )}
       {modal?.type === "colab" && (
-        <NovoColaborador units={allowed} standards={standards} colab={modal.colab} onClose={() => setModal(null)}
+        <NovoColaborador units={allowed} grupos={grupos} standards={standards} colab={modal.colab} onClose={() => setModal(null)}
           onCreate={async (c) => { await handlers.createColab(c); setModal(null); }}
           onEdit={async (id, c) => { await handlers.editColab(id, c); setModal(null); }} />
       )}

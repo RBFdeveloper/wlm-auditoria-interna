@@ -7,8 +7,15 @@ const modoDoTema = (tipo, standards) => {
 };
 const ehColaborador = (m) => m === "colaborador" || m === "escolha" || m === "funcionario";
 const modoTag = (m) => ({ unidade: "casa", departamento: "depto", colaborador: "colab", funcionario: "colab", escolha: "colab", processo: "proc" }[m] || m);
-const unitById = (id) => UNITS.find((u) => u.id === id);
-const unitsOfGrupo = (gid) => UNITS.filter((u) => u.grupoId === gid);
+const unitById = (id, unidades = UNITS) => unidades.find((u) => u.id === id);
+// grupo virtual "csc": junta as unidades tipo 'csc' (não têm grupo_id 'csc' no banco).
+// grupos reais: exclui as tipo 'csc' (elas já aparecem na seção CSC acima).
+const unitsOfGrupo = (gid, unidades = UNITS) => gid === "csc"
+  ? unidades.filter((u) => u.tipo === "csc")
+  : unidades.filter((u) => u.grupoId === gid && u.tipo !== "csc");
+// grupos reais (do banco, sem CSC) + grupo virtual CSC, só se houver alguma unidade tipo 'csc'.
+const gruposParaExibicao = (grupos, unidades) =>
+  unidades.some((u) => u.tipo === "csc") ? [...grupos, { id: "csc", nome: "CSC · Controladoria" }] : grupos;
 
 function flattenReqs(tipo, standards) {
   if (!standards?.[tipo]) return [];
@@ -25,17 +32,17 @@ function findReq(standards, tipo, codigo) {
 const can = (papel, action) => PERMS[papel]?.includes(action);
 const roleLabel = (p) => ROLES[p]?.label || p || "—";
 
-function allowedUnits(user) {
-  if (!user || user.escopo === "all" || can(user.papel, "all_houses")) return UNITS;
-  if (user.escopo?.grupo) return unitsOfGrupo(user.escopo.grupo);
-  if (user.escopo?.unidades) return UNITS.filter((u) => user.escopo.unidades.includes(u.id));
-  return UNITS;
+function allowedUnits(user, unidades = UNITS) {
+  if (!user || user.escopo === "all" || can(user.papel, "all_houses")) return unidades;
+  if (user.escopo?.grupo) return unitsOfGrupo(user.escopo.grupo, unidades);
+  if (user.escopo?.unidades) return unidades.filter((u) => user.escopo.unidades.includes(u.id));
+  return unidades;
 }
-function escopoLabel(escopo) {
+function escopoLabel(escopo, unidades = UNITS, gruposAll = GRUPOS_ALL) {
   if (escopo === "all") return "Todas as casas";
-  if (escopo?.grupo) return GRUPOS_ALL.find((g) => g.id === escopo.grupo)?.nome || "Grupo";
-  if (escopo?.unidades) return escopo.unidades.map((id) => unitById(id)?.nome || id).join(", ");
-  if (escopo?.unidade) return unitById(escopo.unidade)?.nome || "Casa";
+  if (escopo?.grupo) return gruposAll.find((g) => g.id === escopo.grupo)?.nome || "Grupo";
+  if (escopo?.unidades) return escopo.unidades.map((id) => unitById(id, unidades)?.nome || id).join(", ");
+  if (escopo?.unidade) return unitById(escopo.unidade, unidades)?.nome || "Casa";
   return "—";
 }
 function computeMetrics(audits, ncs) {
@@ -87,4 +94,4 @@ function fmtDate(d) { if (!d) return "—"; const [y, m, dd] = d.split("-"); ret
 function titleMap(v) { return { dashboard: "Visão geral", casas: "Casas", auditorias: "Diagnósticos", ncs: "Não conformidades", padroes: "Padrões", usuarios: "Usuários", colaboradores: "Colaboradores" }[v]; }
 function titleEyebrow(v) { return { dashboard: "Painel", casas: "Rede WLM", auditorias: "Gestão", ncs: "Tratamento", padroes: "Referência", usuarios: "Acessos", colaboradores: "Cadastro" }[v]; }
 
-export { rawModo, modoDoTema, ehColaborador, modoTag, unitById, unitsOfGrupo, flattenReqs, findReq, can, roleLabel, allowedUnits, escopoLabel, computeMetrics, unitStats, initials, today, fmtDate, titleMap, titleEyebrow };
+export { rawModo, modoDoTema, ehColaborador, modoTag, unitById, unitsOfGrupo, gruposParaExibicao, flattenReqs, findReq, can, roleLabel, allowedUnits, escopoLabel, computeMetrics, unitStats, initials, today, fmtDate, titleMap, titleEyebrow };
