@@ -1,22 +1,31 @@
 import React, { useState } from "react";
-import { Building2, User, Mail } from "lucide-react";
+import { Building2, User, Mail, ShieldCheck, Check } from "lucide-react";
 import { UNITS, GRUPOS_ALL, ROLES } from "../constants";
 import { unitsOfGrupo } from "../utils";
 import { Modal, Field } from "../ui/common";
 
-function NovoUsuario({ onClose, onCreate }) {
-  const [f, setF] = useState({ nome: "", email: "", papel: "auditor", escopoTipo: "all", grupo: GRUPOS_ALL[0].id, unidade: UNITS[0].id });
+function NovoUsuario({ user = null, onClose, onCreate, onEdit }) {
+  const editando = !!user;
+  const [f, setF] = useState({
+    nome: user?.nome || "", email: user?.email || "", papel: user?.papel || "auditor",
+    escopoTipo: !user || user.escopo === "all" ? "all" : user.escopo?.grupo ? "grupo" : "unidade",
+    grupo: user?.escopo?.grupo || GRUPOS_ALL[0].id,
+    unidade: user?.escopo?.unidades?.[0] || UNITS[0].id,
+  });
+  const [respUnidades, setRespUnidades] = useState(user?.responsavelUnidades || []);
+  const toggleResp = (id) => setRespUnidades((s) => s.includes(id) ? s.filter((x) => x !== id) : [...s, id]);
   const escopo = f.escopoTipo === "all" ? "all"
     : f.escopoTipo === "grupo" ? { grupo: f.grupo } : { unidade: f.unidade };
   const valido = f.nome.trim() && f.email.trim();
   return (
-    <Modal title="Novo usuário" sub="Cadastro" onClose={onClose}>
+    <Modal title={editando ? "Editar usuário" : "Novo usuário"} sub="Cadastro" onClose={onClose}>
       <div className="form">
         <Field label="Nome" icon={User}>
           <input value={f.nome} onChange={(e) => setF({ ...f, nome: e.target.value })} placeholder="Nome completo" />
         </Field>
         <Field label="E-mail" icon={Mail}>
-          <input type="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} placeholder="nome@wlm.com.br" />
+          <input type="email" value={f.email} disabled={editando}
+            onChange={(e) => setF({ ...f, email: e.target.value })} placeholder="nome@wlm.com.br" />
         </Field>
         <Field label="Papel">
           <select value={f.papel} onChange={(e) => setF({ ...f, papel: e.target.value })}>
@@ -52,17 +61,45 @@ function NovoUsuario({ onClose, onCreate }) {
             )}
           </>
         )}
+        <Field label={`Responsável pelas casas (${respUnidades.length})`} icon={ShieldCheck}>
+          {GRUPOS_ALL.map((g) => (
+            <div key={g.id} className="ativ-grupo">
+              <div className="ativ-grupo-h">{g.nome}</div>
+              <div className="ativ-pick">
+                {unitsOfGrupo(g.id).map((u) => (
+                  <button key={u.id} type="button" className={`ativ-chip ${respUnidades.includes(u.id) ? "on" : ""}`}
+                    onClick={() => toggleResp(u.id)}>
+                    {respUnidades.includes(u.id) && <Check size={11} />} {u.nome}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+          <div className="form-note" style={{ marginTop: 6 }}>
+            Isto NÃO é o acesso do usuário — é só quem responde pelas não conformidades abertas nessas casas.
+            Marque quantas fizerem sentido, independente do escopo de acesso acima.
+          </div>
+        </Field>
         <div className="form-note">
           {f.papel === "master"
             ? "Master tem acesso a todas as casas."
-            : <>Senha inicial <b>Peg@2026</b> — o usuário troca no primeiro acesso.</>}
+            : editando
+              ? "O e-mail não pode ser alterado por aqui. A senha não muda nesta tela."
+              : <>Senha inicial <b>Peg@2026</b> — o usuário troca no primeiro acesso.</>}
         </div>
       </div>
       <div className="modal-f">
         <button className="btn ghost" onClick={onClose}>Cancelar</button>
         <button className="btn primary" disabled={!valido}
-          onClick={() => onCreate({ nome: f.nome, email: f.email, papel: f.papel, escopo: f.papel === "master" ? "all" : escopo })}>
-          Criar usuário
+          onClick={() => {
+            const payload = {
+              nome: f.nome, email: f.email, papel: f.papel,
+              escopo: f.papel === "master" ? "all" : escopo,
+              responsavelUnidades: respUnidades,
+            };
+            editando ? onEdit(user.id, payload) : onCreate(payload);
+          }}>
+          {editando ? "Salvar alterações" : "Criar usuário"}
         </button>
       </div>
     </Modal>

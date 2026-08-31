@@ -325,11 +325,12 @@ export async function listUsuarios() {
   if (error) throw error;
   return (data || []).map((p) => ({
     id: p.id, nome: p.nome, email: p.email, papel: p.papel, escopo: mapEscopo(p),
+    responsavelUnidades: p.responsavel_unidades || [],
   }));
 }
 // Cria o usuário. Tenta a Edge Function (fluxo ideal); se não estiver publicada,
 // cai no cadastro direto (signUp) — que exige, no Supabase, "Confirm email" desligado.
-export async function criarUsuario({ nome, email, papel, escopo }) {
+export async function criarUsuario({ nome, email, papel, escopo, responsavelUnidades = [] }) {
   const escopo_tipo = escopo === "all" ? "all" : escopo?.grupo ? "grupo" : "unidade";
   const escopo_grupo_id = escopo?.grupo || null;
   const escopo_unidade_id = escopo?.unidade || null;
@@ -337,7 +338,7 @@ export async function criarUsuario({ nome, email, papel, escopo }) {
   // 1) tenta a Edge Function
   try {
     const { data, error } = await supabase.functions.invoke("criar-usuario", {
-      body: { nome, email, papel, escopo_tipo, escopo_grupo_id, escopo_unidade_id },
+      body: { nome, email, papel, escopo_tipo, escopo_grupo_id, escopo_unidade_id, responsavel_unidades: responsavelUnidades },
     });
     if (!error && data && !data.error) return data;
   } catch (_) { /* segue para o fallback */ }
@@ -353,8 +354,32 @@ export async function criarUsuario({ nome, email, papel, escopo }) {
 
   // grava papel/escopo no profile (o master tem permissão via RLS)
   const { error: pe } = await supabase.from("profiles").upsert({
-    id: uid, nome, email, papel, escopo_tipo, escopo_grupo_id, escopo_unidade_id, senha_provisoria: true,
+    id: uid, nome, email, papel, escopo_tipo, escopo_grupo_id, escopo_unidade_id,
+    responsavel_unidades: responsavelUnidades, senha_provisoria: true,
   });
   if (pe) throw pe;
   return { ok: true, id: uid, fallback: true };
+}
+// Lista enxuta (id, nome, responsavel_unidades) via RPC security definer — liberada
+// para qualquer autenticado, sem expor e-mail/papel/escopo de outros usuários.
+export async function listResponsaveis() {
+  const { data, error } = await supabase.rpc("list_responsaveis");
+  if (error) throw error;
+  return (data || []).map((p) => ({
+    id: p.id, nome: p.nome, responsavelUnidades: p.responsavel_unidades || [],
+  }));
+}
+// Atualiza dados de um usuário existente. Não mexe em login/senha — só o profile.
+export async function atualizarUsuario(id, { nome, papel, escopo, responsavelUnidades }) {
+  const patch = {};
+  if (nome !== undefined) patch.nome = nome;
+  if (papel !== undefined) patch.papel = papel;
+  if (escopo !== undefined) {
+    patch.escopo_tipo = escopo === "all" ? "all" : escopo?.grupo ? "grupo" : "unidade";
+    patch.escopo_grupo_id = escopo?.grupo || null;
+    patch.escopo_unidade_id = escopo?.unidade || null;
+  }
+  if (responsavelUnidades !== undefined) patch.responsavel_unidades = responsavelUnidades;
+  const { error } = await supabase.from("profiles").update(patch).eq("id", id);
+  if (error) throw error;
 }

@@ -215,6 +215,7 @@ html,body{overflow-x:hidden}
 .sev{font-size:11px; font-weight:600; padding:1px 8px; border:1px solid; border-radius:20px}
 .nc-req{font-weight:600; font-size:14px}
 .nc-desc{font-size:13px; color:var(--dim); margin-top:2px}
+.nc-resp-casa{display:flex; align-items:center; gap:5px; font-size:12px; color:var(--brand-2); font-weight:500; margin-top:7px}
 .nc-plan{display:flex; align-items:center; gap:6px; margin-top:9px; font-size:12.5px; color:var(--text);
   background:#f4f7fa; border-radius:6px; padding:7px 10px}
 .nc-resp{color:var(--dim)}

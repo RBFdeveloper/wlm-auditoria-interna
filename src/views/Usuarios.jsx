@@ -1,8 +1,8 @@
 import React from "react";
-import { Plus } from "lucide-react";
+import { Plus, Pencil } from "lucide-react";
 import { roleLabel, escopoLabel, initials } from "../utils";
 
-function Usuarios({ users, onNew }) {
+function Usuarios({ users, onNew, onEdit }) {
   return (
     <div className="card">
       <div className="toolbar">
@@ -10,7 +10,7 @@ function Usuarios({ users, onNew }) {
         <button className="btn primary" onClick={onNew}><Plus size={16} /> Novo usuário</button>
       </div>
       <table className="tbl">
-        <thead><tr><th>Nome</th><th>E-mail</th><th>Papel</th><th>Escopo</th></tr></thead>
+        <thead><tr><th>Nome</th><th>E-mail</th><th>Papel</th><th>Escopo</th><th></th></tr></thead>
         <tbody>
           {users.map((u) => (
             <tr key={u.id}>
@@ -18,6 +18,11 @@ function Usuarios({ users, onNew }) {
               <td className="dim">{u.email}</td>
               <td><span className="role-pill" data-r={u.papel}>{roleLabel(u.papel)}</span></td>
               <td className="dim">{escopoLabel(u.escopo)}</td>
+              <td>
+                <div className="row-actions">
+                  <button className="btn ghost sm" title="Editar" onClick={() => onEdit(u)}><Pencil size={13} /> Editar</button>
+                </div>
+              </td>
             </tr>
           ))}
         </tbody>

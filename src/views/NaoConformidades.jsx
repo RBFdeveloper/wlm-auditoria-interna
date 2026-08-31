@@ -1,13 +1,17 @@
 import React, { useState } from "react";
-import { ClipboardList, FileText, Building2, Contact } from "lucide-react";
+import { ClipboardList, FileText, Building2, Contact, ShieldCheck } from "lucide-react";
 import { NC_STATUS, SEV } from "../constants";
 import { unitById, fmtDate } from "../utils";
 import { Empty, StatusPill } from "../ui/common";
 
-function NaoConformidades({ ncs, audits = [], canTreat, onTreat }) {
+function NaoConformidades({ ncs, audits = [], responsaveis = [], canTreat, onTreat }) {
   const [fst, setFst] = useState("todos");
   const [fcasa, setFcasa] = useState("todas");
   const audById = (id) => audits.find((a) => a.id === id);
+  const respDaCasa = (unidadeId) => {
+    const nomes = responsaveis.filter((u) => u.responsavelUnidades?.includes(unidadeId)).map((u) => u.nome);
+    return nomes.length ? nomes.join(", ") : "sem responsável definido";
+  };
   // casas presentes nas NCs
   const casasNC = [...new Set(ncs.map((n) => audById(n.auditoriaId)?.unidadeId).filter(Boolean))];
   const list = ncs.filter((n) => {
@@ -55,6 +59,9 @@ function NaoConformidades({ ncs, audits = [], canTreat, onTreat }) {
                   </div>
                   <div className="nc-req">{n.requisito}</div>
                   <div className="nc-desc">{n.descricao}</div>
+                  {u && (
+                    <div className="nc-resp-casa"><ShieldCheck size={12} /> Responsável pela casa: {respDaCasa(u.id)}</div>
+                  )}
                   {n.planoAcao && (
                     <div className="nc-plan">
                       <FileText size={13} /> {n.planoAcao}

@@ -27,6 +27,7 @@ Deno.serve(async (req) => {
     const {
       nome, email, papel,
       escopo_tipo = "all", escopo_grupo_id = null, escopo_unidade_id = null,
+      responsavel_unidades = [],
     } = await req.json();
 
     const admin = createClient(url, service);
@@ -38,6 +39,7 @@ Deno.serve(async (req) => {
     await admin.from("profiles").upsert({
       id: created.user.id, nome, email, papel,
       escopo_tipo, escopo_grupo_id, escopo_unidade_id,
+      responsavel_unidades,
       senha_provisoria: true,
     });
 
