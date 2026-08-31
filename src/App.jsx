@@ -3,7 +3,7 @@ import { LayoutDashboard, ClipboardList, AlertTriangle, BookOpenCheck, Plus, Che
 import { UNITS, GRUPOS_ALL, LOGO_WLM } from "./constants";
 import { unitById, can, roleLabel, allowedUnits, gruposParaExibicao, computeMetrics, initials, titleMap, titleEyebrow } from "./utils";
 import { BrandMark, WlmLogo, TopAccent } from "./ui/common";
-import { auth, listStandards, listAuditorias, listNCs, listUsuarios, listResponsaveis, listGrupos, listUnidades, createAuditoria, saveExecucao, saveRascunho, tratarNC, criarUsuario, atualizarUsuario, listColaboradores, createColaborador, updateColaborador, deleteColaborador, createTema, deleteTema, updateTemaModo, listSiglas, updateSigla } from "./lib/db";
+import { auth, listStandards, listAuditorias, listNCs, listUsuarios, listResponsaveis, listGrupos, listUnidades, createGrupo, createUnidade, createAuditoria, saveExecucao, saveRascunho, tratarNC, criarUsuario, atualizarUsuario, listColaboradores, createColaborador, updateColaborador, deleteColaborador, createTema, deleteTema, updateTemaModo, listSiglas, updateSigla } from "./lib/db";
 import { gerarRelatorioPDF } from "./lib/pdf";
 import { Dashboard } from "./views/Dashboard";
 import { Auditorias } from "./views/Auditorias";
@@ -96,6 +96,14 @@ export default function App() {
     async delTema(codigo) { await deleteTema(codigo); await carregar(); },
     async setTemaModo(codigo, modo) { await updateTemaModo(codigo, modo); await carregar(); },
     async setSigla(unidadeId, sigla) { await updateSigla(unidadeId, sigla); await carregar(); },
+    async createGrupo(g) {
+      try { await createGrupo(g); await carregar(); }
+      catch (e) { alert(e.message || "Não foi possível criar a concessão."); }
+    },
+    async createUnidade(u) {
+      try { await createUnidade(u); await carregar(); }
+      catch (e) { alert(e.message || "Não foi possível criar a casa."); }
+    },
     async createUser(u) {
       try { await criarUsuario(u); await carregar(); }
       catch (e) {
@@ -223,7 +231,8 @@ export default function App() {
           {view === "casas" && (
             <Casas audits={baseAudits} ncs={ncs} units={allowed} grupos={grupos} siglas={siglas}
               canEdit={can(papel, "standards")} onSigla={(id, s) => handlers.setSigla(id, s)}
-              onOpen={(unidadeId) => { setScope({ level: "unidade", id: unidadeId }); setView("dashboard"); }} />
+              onOpen={(unidadeId) => { setScope({ level: "unidade", id: unidadeId }); setView("dashboard"); }}
+              onNovoGrupo={(g) => handlers.createGrupo(g)} onNovaUnidade={(u) => handlers.createUnidade(u)} />
           )}
           {view === "auditorias" && (
             <Auditorias audits={scopedAudits} canAudit={canAudit} units={unidades}

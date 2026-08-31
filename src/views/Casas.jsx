@@ -1,11 +1,14 @@
 import React, { useState } from "react";
-import { AlertTriangle, Search, Check } from "lucide-react";
+import { AlertTriangle, Search, Check, Plus } from "lucide-react";
 import { UNITS, GRUPOS_ALL } from "../constants";
 import { unitsOfGrupo, unitStats } from "../utils";
+import { NovoGrupo } from "../modals/NovoGrupo";
+import { NovaUnidade } from "../modals/NovaUnidade";
 
-function Casas({ audits, ncs, units = UNITS, grupos: gruposAll = GRUPOS_ALL, siglas = {}, canEdit, onSigla, onOpen }) {
+function Casas({ audits, ncs, units = UNITS, grupos: gruposAll = GRUPOS_ALL, siglas = {}, canEdit, onSigla, onOpen, onNovoGrupo, onNovaUnidade }) {
   const [tipo, setTipo] = useState("todas"); // todas | concessionaria | csc
   const [q, setQ] = useState("");
+  const [novo, setNovo] = useState(null); // null | "grupo" | "unidade"
   const allowedSet = new Set(units.map((u) => u.id));
   const grupos = gruposAll.filter((g) => tipo === "csc" ? g.id === "csc" : tipo === "concessionaria" ? g.id !== "csc" : true);
   return (
@@ -20,6 +23,12 @@ function Casas({ audits, ncs, units = UNITS, grupos: gruposAll = GRUPOS_ALL, sig
             <button key={k} className={tipo === k ? "on" : ""} onClick={() => setTipo(k)}>{l}</button>
           ))}
         </div>
+        {canEdit && (
+          <div className="tb-right">
+            <button className="btn ghost" onClick={() => setNovo("grupo")}><Plus size={15} /> Nova concessão</button>
+            <button className="btn ghost" onClick={() => setNovo("unidade")}><Plus size={15} /> Nova casa</button>
+          </div>
+        )}
       </div>
 
       {canEdit && <div className="hint" style={{ marginTop: 0, marginBottom: 12 }}>A <b>sigla</b> de cada casa entra no código do diagnóstico (ex.: DTO<b>RJ</b>01/26). Clique na sigla para editar.</div>}
@@ -67,6 +76,15 @@ function Casas({ audits, ncs, units = UNITS, grupos: gruposAll = GRUPOS_ALL, sig
           </div>
         );
       })}
+
+      {novo === "grupo" && (
+        <NovoGrupo onClose={() => setNovo(null)}
+          onCreate={async (g) => { await onNovoGrupo(g); setNovo(null); }} />
+      )}
+      {novo === "unidade" && (
+        <NovaUnidade grupos={gruposAll} onClose={() => setNovo(null)}
+          onCreate={async (u) => { await onNovaUnidade(u); setNovo(null); }} />
+      )}
     </div>
   );
 }

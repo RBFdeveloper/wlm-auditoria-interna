@@ -3,6 +3,7 @@
 // formato que os componentes usam (camelCase), para o App mudar o mínimo.
 import { createClient } from "@supabase/supabase-js";
 import { supabase, SUPA_URL, SUPA_ANON } from "./supabaseClient";
+import { slug } from "../constants";
 
 /* ============================ AUTH ============================ */
 export const auth = {
@@ -109,6 +110,39 @@ export async function listUnidades() {
     grupoNome: u.tipo === "csc" ? "CSC · Controladoria" : (nomeDoGrupo[u.grupo_id] || u.grupo_id),
     tipo: u.tipo, sigla: u.sigla || "",
   }));
+}
+
+// Cria uma concessão (grupo) nova. O id é gerado do nome com a MESMA regra slug
+// usada em constants.js — não é recebido de fora, pra não haver duas fontes de regra.
+export async function createGrupo({ nome }) {
+  const id = slug(nome);
+  const { data: existente, error: e0 } = await supabase.from("grupos").select("id").eq("id", id).maybeSingle();
+  if (e0) throw e0;
+  if (existente) throw new Error(`Já existe uma concessão com esse nome ("${nome}").`);
+  const { error } = await supabase.from("grupos").insert({ id, nome });
+  if (error) {
+    if (error.code === "23505") throw new Error(`Já existe uma concessão com esse nome ("${nome}").`);
+    if (error.code === "42501") throw new Error("Você não tem permissão para criar concessões (só o Master pode).");
+    throw new Error(error.message || "Não foi possível criar a concessão.");
+  }
+  return { id, nome };
+}
+// Cria uma casa (unidade) nova. O id segue a regra atual: "<grupoId>:<slug(nome)>"
+// para concessionária; para CSC usa o mesmo prefixo fixo "csc:" que a CSC Rio já usa
+// hoje, mas grava o grupo_id REAL escolhido (não "csc" — esse id não existe em `grupos`).
+export async function createUnidade({ nome, grupoId, tipo = "concessionaria", sigla = "" }) {
+  const id = tipo === "csc" ? `csc:${slug(nome)}` : `${grupoId}:${slug(nome)}`;
+  const { data: existente, error: e0 } = await supabase.from("unidades").select("id").eq("id", id).maybeSingle();
+  if (e0) throw e0;
+  if (existente) throw new Error(`Já existe uma casa com esse nome nessa concessão ("${nome}").`);
+  const { error } = await supabase.from("unidades")
+    .insert({ id, nome, grupo_id: grupoId, tipo, sigla: (sigla || "").toUpperCase() || null });
+  if (error) {
+    if (error.code === "23505") throw new Error(`Já existe uma casa com esse nome nessa concessão ("${nome}").`);
+    if (error.code === "42501") throw new Error("Você não tem permissão para criar casas (só o Master pode).");
+    throw new Error(error.message || "Não foi possível criar a casa.");
+  }
+  return { id, nome, grupoId, tipo, sigla: (sigla || "").toUpperCase() };
 }
 
 /* ---------- Siglas das casas (para o código) ---------- */
