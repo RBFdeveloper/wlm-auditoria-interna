@@ -240,7 +240,7 @@ export async function saveExecucao(auditoriaId, tipo, itens, colaboradorNome = {
   const patchAud = { status: "concluida" };
   if (tipo === "OPEG") {
     const total = itens.reduce((s, it) => s + (it.peso ?? 1), 0);
-    const feitos = itens.filter((it) => it.resultado === "atende").reduce((s, it) => s + (it.peso ?? 1), 0);
+    const feitos = itens.filter((it) => it.resultado === "conforme").reduce((s, it) => s + (it.peso ?? 1), 0);
     const pontos = total > 0 ? Math.round((feitos / total) * 100) : 0;
     patchAud.pontuacao = pontos;
     patchAud.classificacao = pontos >= 90 ? "Ouro" : pontos >= 80 ? "Prata" : pontos >= 70 ? "Bronze" : "Sem classificação";

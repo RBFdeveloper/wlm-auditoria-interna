@@ -37,10 +37,10 @@ function ExecutarAuditoria({ audit, standards, colaboradores = [], readOnly, onC
     } catch (e) { alert("Não foi possível remover a foto."); }
   };
   const isOPEG = audit.tipo === "OPEG";
-  const RESULTS = isOPEG ? ["atende", "nao_atende"] : ["conforme", "nao_conforme", "na"];
-  const avaliadoR = (r) => isOPEG ? (r === "atende" || r === "nao_atende") : (r === "conforme" || r === "nao_conforme");
+  const RESULTS = ["conforme", "nao_conforme", "na"];
+  const avaliadoR = (r) => r === "conforme" || r === "nao_conforme";
   const pend = (i) => !i.resultado || i.resultado === "pendente";
-  const semC = (i) => !isOPEG && (i.resultado === "nao_conforme" || i.resultado === "na") && !(i.obs || "").trim();
+  const semC = (i) => (i.resultado === "nao_conforme" || i.resultado === "na") && !(i.obs || "").trim();
 
   // estatísticas GERAIS (toda a auditoria)
   const av = itens.filter((i) => avaliadoR(i.resultado));
@@ -53,7 +53,7 @@ function ExecutarAuditoria({ audit, standards, colaboradores = [], readOnly, onC
     : semComentario > 0 ? `${semComentario} item(ns) sem comentário obrigatório` : "";
 
   const pesoTotal = itens.reduce((s, i) => s + (i.peso ?? 1), 0);
-  const pesoFeito = itens.filter((i) => i.resultado === "atende").reduce((s, i) => s + (i.peso ?? 1), 0);
+  const pesoFeito = itens.filter((i) => i.resultado === "conforme").reduce((s, i) => s + (i.peso ?? 1), 0);
   const pontos = pesoTotal ? Math.round((pesoFeito / pesoTotal) * 100) : 0;
   const classif = pontos >= 90 ? "Ouro" : pontos >= 80 ? "Prata" : pontos >= 70 ? "Bronze" : "Sem classificação";
 
@@ -110,7 +110,7 @@ function ExecutarAuditoria({ audit, standards, colaboradores = [], readOnly, onC
             <div className="exec-area-h">{area}</div>
             {list.map((it) => {
               const ref = findReq(standards, audit.tipo, it.codigo) || {};
-              const precisaObs = !isOPEG && (it.resultado === "nao_conforme" || it.resultado === "na");
+              const precisaObs = it.resultado === "nao_conforme" || it.resultado === "na";
               const faltaObs = precisaObs && !(it.obs || "").trim();
               const isPend = pend(it);
               return (
@@ -164,7 +164,6 @@ function ExecutarAuditoria({ audit, standards, colaboradores = [], readOnly, onC
                           style={it.resultado === r ? { background: meta.color, borderColor: meta.color, color: "#fff" } : {}}
                           onClick={() => set(it.idx, { resultado: r })} title={meta.label}>
                           <meta.Icon size={15} />
-                          {isOPEG && <span className="res-btn-txt">{meta.label}</span>}
                         </button>
                       );
                     })}
