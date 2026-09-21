@@ -1,14 +1,17 @@
 import React, { useState } from "react";
-import { AlertTriangle, Search, Check, Plus } from "lucide-react";
+import { AlertTriangle, Search, Check, Plus, Pencil } from "lucide-react";
 import { UNITS, GRUPOS_ALL } from "../constants";
 import { unitsOfGrupo, unitStats } from "../utils";
 import { NovoGrupo } from "../modals/NovoGrupo";
 import { NovaUnidade } from "../modals/NovaUnidade";
+import { Renomear } from "../modals/Renomear";
 
-function Casas({ audits, ncs, units = UNITS, grupos: gruposAll = GRUPOS_ALL, siglas = {}, canEdit, onSigla, onOpen, onNovoGrupo, onNovaUnidade }) {
+function Casas({ audits, ncs, units = UNITS, grupos: gruposAll = GRUPOS_ALL, siglas = {}, canEdit, onSigla, onOpen,
+  onNovoGrupo, onNovaUnidade, onRenomearGrupo, onRenomearUnidade }) {
   const [tipo, setTipo] = useState("todas"); // todas | concessionaria | csc
   const [q, setQ] = useState("");
   const [novo, setNovo] = useState(null); // null | "grupo" | "unidade"
+  const [renomear, setRenomear] = useState(null); // null | { tipo: "grupo"|"unidade", id, nome }
   const allowedSet = new Set(units.map((u) => u.id));
   const grupos = gruposAll.filter((g) => tipo === "csc" ? g.id === "csc" : tipo === "concessionaria" ? g.id !== "csc" : true);
   return (
@@ -38,7 +41,16 @@ function Casas({ audits, ncs, units = UNITS, grupos: gruposAll = GRUPOS_ALL, sig
         if (!us.length) return null;
         return (
           <div key={g.id} className="grupo-block">
-            <div className="grupo-h">{g.nome}<span className="grupo-count">{us.length} casas</span></div>
+            <div className="grupo-h">
+              {g.nome}
+              {canEdit && g.id !== "csc" && (
+                <button className="icon-btn" title="Renomear concessão"
+                  onClick={() => setRenomear({ tipo: "grupo", id: g.id, nome: g.nome })}>
+                  <Pencil size={13} />
+                </button>
+              )}
+              <span className="grupo-count">{us.length} casas</span>
+            </div>
             <div className="casa-grid">
               {us.map((u) => {
                 const s = unitStats(u.id, audits, ncs);
@@ -68,6 +80,12 @@ function Casas({ audits, ncs, units = UNITS, grupos: gruposAll = GRUPOS_ALL, sig
                             onClick={(e) => e.stopPropagation()}
                             onBlur={(e) => { const v = e.target.value.trim().toUpperCase(); if (v !== (siglas[u.id] || "")) onSigla(u.id, v); }} />
                         : <b>{siglas[u.id] || "—"}</b>}
+                      {canEdit && (
+                        <button className="icon-btn" title="Renomear casa"
+                          onClick={() => setRenomear({ tipo: "unidade", id: u.id, nome: u.nome })}>
+                          <Pencil size={12} />
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
@@ -84,6 +102,18 @@ function Casas({ audits, ncs, units = UNITS, grupos: gruposAll = GRUPOS_ALL, sig
       {novo === "unidade" && (
         <NovaUnidade grupos={gruposAll} onClose={() => setNovo(null)}
           onCreate={async (u) => { await onNovaUnidade(u); setNovo(null); }} />
+      )}
+      {renomear && (
+        <Renomear
+          titulo={renomear.tipo === "grupo" ? "Renomear concessão" : "Renomear casa"}
+          label={renomear.tipo === "grupo" ? "Nome da concessão" : "Nome da casa"}
+          valorAtual={renomear.nome}
+          onClose={() => setRenomear(null)}
+          onSave={async (novoNome) => {
+            if (renomear.tipo === "grupo") await onRenomearGrupo(renomear.id, novoNome);
+            else await onRenomearUnidade(renomear.id, novoNome);
+            setRenomear(null);
+          }} />
       )}
     </div>
   );

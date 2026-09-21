@@ -15,7 +15,7 @@ function Padroes({ standards, canEdit, reload, onNewTema, onDelTema, onTemaModo 
   const run = async (fn) => {
     setBusy(true);
     try { await fn(); await reload(); }
-    catch (e) { alert("Erro ao salvar: " + (e.message || e)); }
+    catch (e) { console.error(e); alert("Erro ao salvar: " + (e.message || e)); }
     finally { setBusy(false); }
   };
   const onRenameArea = (a, nome) => { if (nome.trim() && nome !== a.area) run(() => updateArea(a.id, { nome })); };

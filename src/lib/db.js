@@ -145,6 +145,29 @@ export async function createUnidade({ nome, grupoId, tipo = "concessionaria", si
   return { id, nome, grupoId, tipo, sigla: (sigla || "").toUpperCase() };
 }
 
+// Renomeia uma concessão. Só o "nome" muda — o id nunca é tocado (é referenciado
+// por unidades.grupo_id e profiles.escopo_grupo_id).
+export async function renameGrupo(id, nome) {
+  const n = (nome || "").trim();
+  if (!n) throw new Error("O nome não pode ficar vazio.");
+  const { error } = await supabase.from("grupos").update({ nome: n }).eq("id", id);
+  if (error) {
+    if (error.code === "42501") throw new Error("Você não tem permissão para renomear concessões (só o Master pode).");
+    throw new Error(error.message || "Não foi possível renomear a concessão.");
+  }
+}
+// Renomeia uma casa. Só o "nome" muda — id, grupo_id, tipo e sigla ficam intactos
+// (id é referenciado por auditorias, colaboradores e profiles).
+export async function renameUnidade(id, nome) {
+  const n = (nome || "").trim();
+  if (!n) throw new Error("O nome não pode ficar vazio.");
+  const { error } = await supabase.from("unidades").update({ nome: n }).eq("id", id);
+  if (error) {
+    if (error.code === "42501") throw new Error("Você não tem permissão para renomear casas (só o Master pode).");
+    throw new Error(error.message || "Não foi possível renomear a casa.");
+  }
+}
+
 /* ---------- Siglas das casas (para o código) ---------- */
 export async function listSiglas() {
   const { data, error } = await supabase.from("unidades").select("id, sigla");
@@ -180,7 +203,11 @@ export async function uploadFotoRequisito(requisitoId, file) {
   const ext = (file.name.split(".").pop() || "jpg");
   const path = `req/${requisitoId}-${Date.now()}.${ext}`;
   const { error } = await supabase.storage.from("padroes").upload(path, file, { upsert: true });
-  if (error) throw error;
+  if (error) {
+    // eslint-disable-next-line no-console
+    console.error("[uploadFotoRequisito] Supabase Storage:", error);
+    throw new Error(`Falha ao enviar a foto: ${error.message || error}`);
+  }
   await updateRequisito(requisitoId, { foto_path: path });
   return publicFotoUrl(path);
 }
@@ -189,10 +216,18 @@ export async function uploadFotoItem(itemId, slot, file) {
   const ext = (file.name.split(".").pop() || "jpg");
   const path = `evid/${itemId}-${slot}-${Date.now()}.${ext}`;
   const { error } = await supabase.storage.from("padroes").upload(path, file, { upsert: true });
-  if (error) throw error;
+  if (error) {
+    // eslint-disable-next-line no-console
+    console.error("[uploadFotoItem] Supabase Storage:", error);
+    throw new Error(`Falha ao enviar a foto: ${error.message || error}`);
+  }
   const col = slot === 2 ? "foto2_path" : "foto1_path";
   const { error: e2 } = await supabase.from("auditoria_itens").update({ [col]: path }).eq("id", itemId);
-  if (e2) throw e2;
+  if (e2) {
+    // eslint-disable-next-line no-console
+    console.error("[uploadFotoItem] update auditoria_itens:", e2);
+    throw new Error(`Foto enviada, mas falhou ao salvar no diagnóstico: ${e2.message || e2}`);
+  }
   return { path, url: publicFotoUrl(path) };
 }
 export async function removeFotoItem(itemId, slot) {
@@ -268,6 +303,28 @@ export async function createAuditoria({
     if (e2) throw e2;
   }
   return aud.id;
+}
+// Apaga um diagnóstico e seus dependentes, na ordem que respeita as FKs mesmo que
+// o ON DELETE CASCADE de auditoria_itens/nao_conformidades não esteja ativo no banco
+// (o schema.sql do repo declara CASCADE nas duas, mas não temos garantia de que o
+// banco vivo bate 100% com esse arquivo — já vimos divergências antes). Master only
+// (RLS: aud_del é is_master(); ver nota sobre item/nc abaixo).
+export async function deleteAuditoria(id) {
+  const { error: e1 } = await supabase.from("nao_conformidades").delete().eq("auditoria_id", id);
+  if (e1) {
+    if (e1.code === "42501") throw new Error("Sem permissão para apagar as não conformidades deste diagnóstico (só o Master pode).");
+    throw new Error(e1.message || "Não foi possível apagar as não conformidades deste diagnóstico.");
+  }
+  const { error: e2 } = await supabase.from("auditoria_itens").delete().eq("auditoria_id", id);
+  if (e2) {
+    if (e2.code === "42501") throw new Error("Sem permissão para apagar os itens deste diagnóstico (só o Master pode).");
+    throw new Error(e2.message || "Não foi possível apagar os itens deste diagnóstico.");
+  }
+  const { error: e3 } = await supabase.from("auditorias").delete().eq("id", id);
+  if (e3) {
+    if (e3.code === "42501") throw new Error("Sem permissão para apagar diagnósticos (só o Master pode).");
+    throw new Error(e3.message || "Não foi possível apagar o diagnóstico.");
+  }
 }
 export async function saveRascunho(auditoriaId, itens) {
   const rows = itens.map((it) => ({

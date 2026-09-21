@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { Search, X, ChevronRight, FileText } from "lucide-react";
+import { Search, X, ChevronRight, FileText, Trash2 } from "lucide-react";
 import { AUD_STATUS, UNITS } from "../constants";
 import { unitById, fmtDate } from "../utils";
 import { Empty, StatusPill } from "../ui/common";
 
-function Auditorias({ audits, canAudit, units = UNITS, onNew, onExec, onPdf }) {
+function Auditorias({ audits, canAudit, units = UNITS, isMaster, onNew, onExec, onPdf, onDelete }) {
   const [ftipo, setFtipo] = useState("todos");
   const [fstatus, setFstatus] = useState("todos");
   const [q, setQ] = useState("");
@@ -94,6 +94,16 @@ function Auditorias({ audits, canAudit, units = UNITS, onNew, onExec, onPdf }) {
                       <button className="btn ghost sm" onClick={() => onExec(a.id)}>
                         {!canAudit ? "Ver" : a.status === "concluida" ? "Revisar" : "Executar"} <ChevronRight size={14} />
                       </button>
+                      {isMaster && (
+                        <button className="mini-del" title="Apagar diagnóstico"
+                          onClick={() => {
+                            if (confirm(`Apagar o diagnóstico ${a.codigoFmt || ""}?\n\nIsso remove permanentemente o diagnóstico, seus itens e as não conformidades geradas por ele. Não dá pra desfazer.`)) {
+                              onDelete(a.id);
+                            }
+                          }}>
+                          <Trash2 size={14} />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

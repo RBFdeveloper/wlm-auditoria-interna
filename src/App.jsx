@@ -3,7 +3,7 @@ import { LayoutDashboard, ClipboardList, AlertTriangle, BookOpenCheck, Plus, Che
 import { UNITS, GRUPOS_ALL, LOGO_WLM } from "./constants";
 import { unitById, can, roleLabel, allowedUnits, gruposParaExibicao, computeMetrics, initials, titleMap, titleEyebrow } from "./utils";
 import { BrandMark, WlmLogo, TopAccent } from "./ui/common";
-import { auth, listStandards, listAuditorias, listNCs, listUsuarios, listResponsaveis, listGrupos, listUnidades, createGrupo, createUnidade, createAuditoria, saveExecucao, saveRascunho, tratarNC, criarUsuario, atualizarUsuario, listColaboradores, createColaborador, updateColaborador, deleteColaborador, createTema, deleteTema, updateTemaModo, listSiglas, updateSigla } from "./lib/db";
+import { auth, listStandards, listAuditorias, listNCs, listUsuarios, listResponsaveis, listGrupos, listUnidades, createGrupo, createUnidade, renameGrupo, renameUnidade, createAuditoria, deleteAuditoria, saveExecucao, saveRascunho, tratarNC, criarUsuario, atualizarUsuario, listColaboradores, createColaborador, updateColaborador, deleteColaborador, createTema, deleteTema, updateTemaModo, listSiglas, updateSigla } from "./lib/db";
 import { gerarRelatorioPDF } from "./lib/pdf";
 import { Dashboard } from "./views/Dashboard";
 import { Auditorias } from "./views/Auditorias";
@@ -104,6 +104,18 @@ export default function App() {
       try { await createUnidade(u); await carregar(); }
       catch (e) { alert(e.message || "Não foi possível criar a casa."); }
     },
+    async renameGrupo(id, nome) {
+      try { await renameGrupo(id, nome); await carregar(); }
+      catch (e) { alert(e.message || "Não foi possível renomear a concessão."); }
+    },
+    async renameUnidade(id, nome) {
+      try { await renameUnidade(id, nome); await carregar(); }
+      catch (e) { alert(e.message || "Não foi possível renomear a casa."); }
+    },
+    async deleteAudit(id) {
+      try { await deleteAuditoria(id); await carregar(); }
+      catch (e) { alert(e.message || "Não foi possível apagar o diagnóstico."); }
+    },
     async createUser(u) {
       try { await criarUsuario(u); await carregar(); }
       catch (e) {
@@ -164,6 +176,7 @@ export default function App() {
     ...(can(papel, "users") ? [["colaboradores", "Colaboradores", Contact], ["usuarios", "Usuários", Users]] : []),
   ];
   const canAudit = can(papel, "audit");
+  const isMaster = papel === "master";
 
   return (
     <div className={`app ${mobileNav ? "nav-open" : ""}`}>
@@ -232,13 +245,16 @@ export default function App() {
             <Casas audits={baseAudits} ncs={ncs} units={allowed} grupos={grupos} siglas={siglas}
               canEdit={can(papel, "standards")} onSigla={(id, s) => handlers.setSigla(id, s)}
               onOpen={(unidadeId) => { setScope({ level: "unidade", id: unidadeId }); setView("dashboard"); }}
-              onNovoGrupo={(g) => handlers.createGrupo(g)} onNovaUnidade={(u) => handlers.createUnidade(u)} />
+              onNovoGrupo={(g) => handlers.createGrupo(g)} onNovaUnidade={(u) => handlers.createUnidade(u)}
+              onRenomearGrupo={(id, nome) => handlers.renameGrupo(id, nome)}
+              onRenomearUnidade={(id, nome) => handlers.renameUnidade(id, nome)} />
           )}
           {view === "auditorias" && (
-            <Auditorias audits={scopedAudits} canAudit={canAudit} units={unidades}
+            <Auditorias audits={scopedAudits} canAudit={canAudit} units={unidades} isMaster={isMaster}
               onNew={() => setModal({ type: "new" })}
               onExec={(id) => setModal({ type: "exec", id })}
-              onPdf={(a) => gerarRelatorioPDF({ audit: a, ncs, colaboradores, unidadeNome: unitById(a.unidadeId, unidades)?.nome || "—", logo: LOGO_WLM })} />
+              onPdf={(a) => gerarRelatorioPDF({ audit: a, ncs, colaboradores, unidadeNome: unitById(a.unidadeId, unidades)?.nome || "—", logo: LOGO_WLM })}
+              onDelete={(id) => handlers.deleteAudit(id)} />
           )}
           {view === "ncs" && (
             <NaoConformidades ncs={scopedNcs} audits={audits} responsaveis={responsaveis} units={unidades} canTreat={can(papel, "treat")}

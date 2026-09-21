@@ -27,14 +27,20 @@ function ExecutarAuditoria({ audit, standards, colaboradores = [], units = UNITS
     try {
       const { path, url } = await uploadFotoItem(it.id, slot, file);
       set(it.idx, slot === 2 ? { foto2: url, foto2_path: path } : { foto1: url, foto1_path: path });
-    } catch (e) { alert("Não foi possível enviar a foto. Tente novamente."); }
+    } catch (e) {
+      console.error("Erro ao enviar foto de evidência:", e);
+      alert(e.message || "Não foi possível enviar a foto. Tente novamente.");
+    }
     setSubindo(null);
   };
   const removerFoto = async (it, slot) => {
     try {
       await removeFotoItem(it.id, slot);
       set(it.idx, slot === 2 ? { foto2: null, foto2_path: null } : { foto1: null, foto1_path: null });
-    } catch (e) { alert("Não foi possível remover a foto."); }
+    } catch (e) {
+      console.error("Erro ao remover foto de evidência:", e);
+      alert(e.message || "Não foi possível remover a foto.");
+    }
   };
   const isOPEG = audit.tipo === "OPEG";
   const RESULTS = ["conforme", "nao_conforme", "na"];
