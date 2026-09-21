@@ -147,7 +147,7 @@ function ExecutarAuditoria({ audit, standards, colaboradores = [], units = UNITS
                           <label key={slot} className={`evid-add ${enviando ? "loading" : ""}`}>
                             <ImagePlus size={15} />
                             <span>{enviando ? "enviando…" : `Foto ${slot}`}</span>
-                            <input type="file" accept="image/*" hidden disabled={enviando}
+                            <input type="file" accept="image/*" capture="environment" hidden disabled={enviando}
                               onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; subirFoto(it, slot, f); }} />
                           </label>
                         );

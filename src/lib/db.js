@@ -4,6 +4,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { supabase, SUPA_URL, SUPA_ANON } from "./supabaseClient";
 import { slug } from "../constants";
+import { prepararFotoParaUpload } from "./imagem";
 
 /* ============================ AUTH ============================ */
 export const auth = {
@@ -200,9 +201,10 @@ export async function deleteRequisito(id) {
   if (error) throw error;
 }
 export async function uploadFotoRequisito(requisitoId, file) {
-  const ext = (file.name.split(".").pop() || "jpg");
+  const foto = await prepararFotoParaUpload(file);
+  const ext = (foto.name.split(".").pop() || "jpg");
   const path = `req/${requisitoId}-${Date.now()}.${ext}`;
-  const { error } = await supabase.storage.from("padroes").upload(path, file, { upsert: true });
+  const { error } = await supabase.storage.from("padroes").upload(path, foto, { upsert: true });
   if (error) {
     // eslint-disable-next-line no-console
     console.error("[uploadFotoRequisito] Supabase Storage:", error);
@@ -213,9 +215,10 @@ export async function uploadFotoRequisito(requisitoId, file) {
 }
 
 export async function uploadFotoItem(itemId, slot, file) {
-  const ext = (file.name.split(".").pop() || "jpg");
+  const foto = await prepararFotoParaUpload(file);
+  const ext = (foto.name.split(".").pop() || "jpg");
   const path = `evid/${itemId}-${slot}-${Date.now()}.${ext}`;
-  const { error } = await supabase.storage.from("padroes").upload(path, file, { upsert: true });
+  const { error } = await supabase.storage.from("padroes").upload(path, foto, { upsert: true });
   if (error) {
     // eslint-disable-next-line no-console
     console.error("[uploadFotoItem] Supabase Storage:", error);
