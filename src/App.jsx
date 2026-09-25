@@ -270,7 +270,7 @@ export default function App() {
               onEdit={(u) => setModal({ type: "user", user: u })} />
           )}
           {view === "colaboradores" && can(papel, "users") && (
-            <Colaboradores colaboradores={colaboradores} units={allowed}
+            <Colaboradores colaboradores={colaboradores} units={allowed} isMaster={isMaster}
               onNew={() => setModal({ type: "colab" })}
               onEdit={(c) => setModal({ type: "colab", colab: c })}
               onDel={(id) => handlers.delColab(id)} />

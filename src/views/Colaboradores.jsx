@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { Search, Trash2, Pencil, UserPlus } from "lucide-react";
+import { Search, Trash2, Pencil, UserPlus, FileSpreadsheet, FileText } from "lucide-react";
 import { UNITS } from "../constants";
 import { unitById, initials } from "../utils";
 import { Empty } from "../ui/common";
+import { exportarTreinamentosCSV, exportarTreinamentosPDF } from "../lib/relatorios";
 
-function Colaboradores({ colaboradores, units = UNITS, onNew, onEdit, onDel }) {
+function Colaboradores({ colaboradores, units = UNITS, isMaster, onNew, onEdit, onDel }) {
   const [q, setQ] = useState("");
   const [uf, setUf] = useState("todas");
   const allowedSet = new Set(units.map((u) => u.id));
@@ -27,6 +28,18 @@ function Colaboradores({ colaboradores, units = UNITS, onNew, onEdit, onDel }) {
             <option value="todas">Todas as casas</option>
             {casasComColab.map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
           </select>
+          {isMaster && (
+            <>
+              <button className="btn ghost" title="Exporta os colaboradores listados abaixo (respeita busca e filtro de casa)"
+                onClick={() => exportarTreinamentosCSV(list, units)}>
+                <FileSpreadsheet size={15} /> Exportar treinamentos (Excel)
+              </button>
+              <button className="btn ghost" title="Exporta os colaboradores listados abaixo (respeita busca e filtro de casa)"
+                onClick={() => exportarTreinamentosPDF(list, units)}>
+                <FileText size={15} /> Exportar treinamentos (PDF)
+              </button>
+            </>
+          )}
           <button className="btn primary" onClick={onNew}><UserPlus size={16} /> Novo colaborador</button>
         </div>
       </div>
@@ -34,7 +47,7 @@ function Colaboradores({ colaboradores, units = UNITS, onNew, onEdit, onDel }) {
         <Empty>Nenhum colaborador cadastrado. <button className="link" onClick={onNew}>Cadastrar o primeiro</button>.</Empty>
       ) : (
         <table className="tbl">
-          <thead><tr><th>Nome</th><th>Cargo</th><th>Departamento</th><th>Casa</th><th></th></tr></thead>
+          <thead><tr><th>Nome</th><th>Cargo</th><th>Departamento</th><th>Casa</th><th className="acoes">Ações</th></tr></thead>
           <tbody>
             {list.map((c) => {
               const u = unitById(c.unidadeId, units);
@@ -43,10 +56,10 @@ function Colaboradores({ colaboradores, units = UNITS, onNew, onEdit, onDel }) {
                   <td className="strong"><span className="u-ava">{initials(c.nome)}</span>{c.nome}
                     {c.atividades?.length > 0 && <div className="colab-ativ">{c.atividades.join(" · ")}</div>}
                   </td>
-                  <td>{c.cargo || "—"}</td>
+                  <td>{c.cargo || <span className="dim">—</span>}</td>
                   <td className="dim">{c.departamento || "—"}</td>
                   <td className="dim">{u ? u.nome : "—"}</td>
-                  <td>
+                  <td className="acoes">
                     <div className="row-actions">
                       <button className="btn ghost sm" title="Editar" onClick={() => onEdit(c)}><Pencil size={13} /> Editar</button>
                       <button className="mini-del" title="Remover" onClick={() => confirm(`Remover ${c.nome}?`) && onDel(c.id)}><Trash2 size={14} /></button>

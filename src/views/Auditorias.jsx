@@ -60,7 +60,7 @@ function Auditorias({ audits, canAudit, units = UNITS, isMaster, onNew, onExec, 
         <table className="tbl">
           <thead><tr>
             <th>Código</th><th>Tema</th><th>Casa</th><th>Setor</th><th>Data</th>
-            <th>Resultado</th><th>Status</th><th></th>
+            <th>Resultado</th><th>Status</th><th className="acoes">Ações</th>
           </tr></thead>
           <tbody>
             {list.map((a) => {
@@ -72,12 +72,12 @@ function Auditorias({ audits, canAudit, units = UNITS, isMaster, onNew, onExec, 
               const u = unitById(a.unidadeId, units);
               return (
                 <tr key={a.id}>
-                  <td className="cod-cell">{a.codigoFmt || "—"}</td>
+                  <td className="cod-cell">{a.codigoFmt || <span className="dim">—</span>}</td>
                   <td><span className="tag-tipo" data-t={a.tipo}>{a.tipo}</span></td>
-                  <td className="strong">{u ? u.nome : "—"}{u?.tipo === "csc" && <span className="csc-tag">CSC</span>}
+                  <td className="strong">{u ? u.nome : <span className="dim">—</span>}{u?.tipo === "csc" && <span className="csc-tag">CSC</span>}
                     {(a.departamento || a.responsavelNome) && <div className="aud-sub">{a.departamento || ""}{a.responsavelNome ? ` · ${a.responsavelNome}` : ""}</div>}
                   </td>
-                  <td>{a.setor}</td>
+                  <td>{a.setor && a.setor !== "—" ? a.setor : <span className="dim">—</span>}</td>
                   <td className="dim">{fmtDate(a.data)}</td>
                   <td>{isOPEG
                     ? (a.pontuacao != null
@@ -85,8 +85,8 @@ function Auditorias({ audits, canAudit, units = UNITS, isMaster, onNew, onExec, 
                         : <span className="dim">—</span>)
                     : (taxa === null ? <span className="dim">—</span>
                         : <span className="mini-meter"><i style={{ width: `${taxa}%`, background: taxa >= 90 ? "var(--ok)" : taxa >= 70 ? "var(--warn)" : "var(--no)" }} /><b>{taxa}%</b></span>)}</td>
-                  <td><StatusPill map={AUD_STATUS} k={a.status} /></td>
-                  <td>
+                  <td>{a.status ? <StatusPill map={AUD_STATUS} k={a.status} /> : <span className="dim">—</span>}</td>
+                  <td className="acoes">
                     <div className="row-actions">
                       {a.status === "concluida" && (
                         <button className="btn ghost sm" onClick={() => onPdf(a)} title="Baixar relatório PDF"><FileText size={14} /> PDF</button>

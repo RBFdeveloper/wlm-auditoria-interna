@@ -66,8 +66,8 @@ function NaoConformidades({ ncs, audits = [], responsaveis = [], units = UNITS, 
                     {n.colaboradorNome && <span className="nc-casa"><Contact size={11} /> {n.colaboradorNome}</span>}
                     {n.processo && <span className="nc-casa"><ClipboardList size={11} /> {n.processo}</span>}
                   </div>
-                  <div className="nc-req">{n.requisito}</div>
-                  <div className="nc-desc">{n.descricao}</div>
+                  <div className="nc-req">{n.requisito || <span className="dim">—</span>}</div>
+                  <div className="nc-desc">{n.descricao || <span className="dim">Sem descrição</span>}</div>
                   {u && (
                     <div className="nc-resp-casa"><ShieldCheck size={12} /> Responsável pela casa: {respDaCasa(u.id)}</div>
                   )}
