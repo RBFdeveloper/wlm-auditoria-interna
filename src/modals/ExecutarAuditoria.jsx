@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Camera, Eye, ImagePlus, X } from "lucide-react";
+import { Camera, Eye, ImagePlus, X, AlertTriangle } from "lucide-react";
 import { RESULT_META, UNITS } from "../constants";
 import { unitById, findReq } from "../utils";
 import { Modal } from "../ui/common";
@@ -45,21 +45,36 @@ function ExecutarAuditoria({ audit, standards, colaboradores = [], units = UNITS
   const isOPEG = audit.tipo === "OPEG";
   const RESULTS = isOPEG ? ["conforme", "nao_conforme"] : ["conforme", "nao_conforme", "na"];
   const avaliadoR = (r) => r === "conforme" || r === "nao_conforme";
-  const pend = (i) => !i.resultado || i.resultado === "pendente";
-  const semC = (i) => (i.resultado === "nao_conforme" || i.resultado === "na") && !(i.obs || "").trim();
 
-  // estatísticas GERAIS (toda a auditoria)
-  const av = itens.filter((i) => avaliadoR(i.resultado));
+  // treinamento OJT: só vale pra itens por colaborador. Sem treinamentos
+  // registrados pro colaborador, ele é considerado treinado (não bloqueia
+  // colaboradores cadastrados antes dessa feature existir).
+  const treinadoPara = (it) => {
+    if (!porColaborador) return true;
+    const colab = colaboradores.find((c) => c.id === it.colaboradorId);
+    return !colab?.treinamentos ? true : !!colab.treinamentos[it.area];
+  };
+  const bloqueado = (it) => !treinadoPara(it);
+
+  const pend = (i) => !bloqueado(i) && (!i.resultado || i.resultado === "pendente");
+  const semC = (i) => !bloqueado(i) && (i.resultado === "nao_conforme" || i.resultado === "na") && !(i.obs || "").trim();
+
+  // estatísticas GERAIS (toda a auditoria) — itens bloqueados por falta de
+  // treinamento ficam fora da conta: não são "pendentes" (senão nunca dava pra
+  // concluir) nem entram na pontuação/conformidade (senão distorceriam a nota).
+  const avaliaveis = itens.filter((i) => !bloqueado(i));
+  const av = avaliaveis.filter((i) => avaliadoR(i.resultado));
   const taxa = av.length ? Math.round((av.filter((i) => i.resultado === "conforme").length / av.length) * 100) : 0;
-  const ncCount = itens.filter((i) => i.resultado === "nao_conforme").length;
+  const ncCount = avaliaveis.filter((i) => i.resultado === "nao_conforme").length;
   const pendentes = itens.filter(pend).length;
   const semComentario = itens.filter(semC).length;
+  const bloqueados = itens.filter(bloqueado).length;
   const podeConcluir = pendentes === 0 && semComentario === 0;
   const motivo = pendentes > 0 ? `${pendentes} item(ns) sem avaliação`
     : semComentario > 0 ? `${semComentario} item(ns) sem comentário obrigatório` : "";
 
-  const pesoTotal = itens.reduce((s, i) => s + (i.peso ?? 1), 0);
-  const pesoFeito = itens.filter((i) => i.resultado === "conforme").reduce((s, i) => s + (i.peso ?? 1), 0);
+  const pesoTotal = avaliaveis.reduce((s, i) => s + (i.peso ?? 1), 0);
+  const pesoFeito = avaliaveis.filter((i) => i.resultado === "conforme").reduce((s, i) => s + (i.peso ?? 1), 0);
   const pontos = pesoTotal ? Math.round((pesoFeito / pesoTotal) * 100) : 0;
   const classif = pontos >= 90 ? "Ouro" : pontos >= 80 ? "Prata" : pontos >= 70 ? "Bronze" : "Sem classificação";
 
@@ -68,9 +83,10 @@ function ExecutarAuditoria({ audit, standards, colaboradores = [], units = UNITS
     .filter((it) => !porSujeito || subjKey(it) === aba);
   const areas = visiveis.reduce((acc, it) => { (acc[it.area] = acc[it.area] || []).push(it); return acc; }, {});
 
-  // progresso por sujeito (para os badges das abas)
+  // progresso por sujeito (para os badges das abas) — itens bloqueados por
+  // treinamento não contam nem como pendentes nem no total a bater
   const progSubj = (k) => {
-    const its = itens.filter((i) => subjKey(i) === k);
+    const its = itens.filter((i) => subjKey(i) === k && !bloqueado(i));
     const feitos = its.filter((i) => !pend(i) && !semC(i)).length;
     return { feitos, total: its.length, ok: feitos === its.length && its.length > 0 };
   };
@@ -92,8 +108,13 @@ function ExecutarAuditoria({ audit, standards, colaboradores = [], units = UNITS
           <div className="exec-stat"><span>Conformidade</span><b>{taxa}%</b></div>
           <div className="exec-stat"><span>Não conformes</span><b style={{ color: ncCount ? "var(--no)" : "inherit" }}>{ncCount}</b></div>
         </>)}
-        <div className="exec-stat"><span>Respondidos</span><b>{itens.filter((i) => !pend(i)).length}/{itens.length}</b></div>
+        <div className="exec-stat"><span>Respondidos</span><b>{avaliaveis.filter((i) => !pend(i)).length}/{avaliaveis.length}</b></div>
         {porSujeito && <div className="exec-stat"><span>{porColaborador ? "Colaboradores" : "Processos"}</span><b>{subjetos.length}</b></div>}
+        {bloqueados > 0 && (
+          <div className="exec-stat" title="Itens de colaboradores sem treinamento (OJT) registrado no processo — cadastre o treinamento em Colaboradores">
+            <span>Bloqueados (sem treino)</span><b style={{ color: "var(--warn)" }}>{bloqueados}</b>
+          </div>
+        )}
       </div>
 
       {porSujeito && (
@@ -119,8 +140,9 @@ function ExecutarAuditoria({ audit, standards, colaboradores = [], units = UNITS
               const precisaObs = it.resultado === "nao_conforme" || it.resultado === "na";
               const faltaObs = precisaObs && !(it.obs || "").trim();
               const isPend = pend(it);
+              const isBloqueado = bloqueado(it);
               return (
-                <div key={it.idx} className={`exec-item ${isPend ? "pend" : ""}`}>
+                <div key={it.idx} className={`exec-item ${isPend ? "pend" : ""} ${isBloqueado ? "bloqueado" : ""}`}>
                   <div className="exec-ref">
                     {ref.foto
                       ? <img src={ref.foto} alt="padrão" className="exec-thumb" onClick={() => setZoom(ref.foto)} />
@@ -133,6 +155,9 @@ function ExecutarAuditoria({ audit, standards, colaboradores = [], units = UNITS
                       {isOPEG && <span className="peso-tag">peso {it.peso ?? 1}</span>}
                       {isPend && <span className="pend-tag">pendente</span>}
                     </div>
+                    {isBloqueado && (
+                      <div className="exec-instr treino-bloqueio"><AlertTriangle size={12} /> Colaborador não treinado neste padrão — treine antes de auditar.</div>
+                    )}
                     {ref.instrucao && <div className="exec-instr"><Eye size={12} /> {ref.instrucao}</div>}
                     <div className="exec-evid">
                       {[1, 2].map((slot) => {
@@ -158,7 +183,7 @@ function ExecutarAuditoria({ audit, standards, colaboradores = [], units = UNITS
                         placeholder={it.resultado === "na"
                           ? "Justifique por que não se aplica (obrigatório)…"
                           : "Descreva a não conformidade — obrigatório (vira uma NC)…"}
-                        disabled={readOnly}
+                        disabled={readOnly || isBloqueado}
                         value={it.obs} onChange={(e) => set(it.idx, { obs: e.target.value })} />
                     )}
                   </div>
@@ -166,7 +191,7 @@ function ExecutarAuditoria({ audit, standards, colaboradores = [], units = UNITS
                     {RESULTS.map((r) => {
                       const meta = RESULT_META[r];
                       return (
-                        <button key={r} className={`res-btn ${it.resultado === r ? "on" : ""}`} disabled={readOnly}
+                        <button key={r} className={`res-btn ${it.resultado === r ? "on" : ""}`} disabled={readOnly || isBloqueado}
                           style={it.resultado === r ? { background: meta.color, borderColor: meta.color, color: "#fff" } : {}}
                           onClick={() => set(it.idx, { resultado: r })} title={meta.label}>
                           <meta.Icon size={15} />

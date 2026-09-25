@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { ClipboardList, Check, Building2, User } from "lucide-react";
 import { DEPARTAMENTOS, CARGOS, UNITS, GRUPOS_ALL } from "../constants";
-import { ehColaborador, unitsOfGrupo } from "../utils";
+import { ehColaborador, unitsOfGrupo, fmtDate } from "../utils";
 import { Modal, Field } from "../ui/common";
 
 function NovoColaborador({ units = UNITS, grupos: gruposAll = GRUPOS_ALL, standards = {}, colab = null, onClose, onCreate, onEdit }) {
@@ -13,6 +13,8 @@ function NovoColaborador({ units = UNITS, grupos: gruposAll = GRUPOS_ALL, standa
     departamento: colab?.departamento || DEPARTAMENTOS[0], unidadeId: colab?.unidadeId || units[0]?.id,
   });
   const [ativ, setAtiv] = useState(colab?.atividades || []);
+  // treinamento OJT: { "Nome do padrão": "YYYY-MM-DD" } — chave presente = treinado
+  const [treinos, setTreinos] = useState(colab?.treinamentos || {});
 
   // processos/atividades para marcar: de temas por colaborador E sempre do DTO/DCS,
   // independente do modo em que o tema esteja (evita ficar preso por causa do modo).
@@ -23,7 +25,17 @@ function NovoColaborador({ units = UNITS, grupos: gruposAll = GRUPOS_ALL, standa
   dtoAreas.forEach((a) => { (porDepto[a.departamento || "Sem departamento"] ||= []).push(a.area); });
   const temProcessos = dtoAreas.length > 0;
 
-  const toggleAtiv = (a) => setAtiv((s) => s.includes(a) ? s.filter((x) => x !== a) : [...s, a]);
+  const toggleAtiv = (a) => setAtiv((s) => {
+    if (s.includes(a)) {
+      setTreinos((t) => { const { [a]: _fora, ...resto } = t; return resto; });
+      return s.filter((x) => x !== a);
+    }
+    return [...s, a];
+  });
+  const setTreino = (a, data) => setTreinos((t) => {
+    if (!data) { const { [a]: _fora, ...resto } = t; return resto; }
+    return { ...t, [a]: data };
+  });
   const valido = f.nome.trim() && f.unidadeId;
   return (
     <Modal title={editando ? "Editar colaborador" : "Novo colaborador"} sub="Cadastro" onClose={onClose}>
@@ -61,22 +73,37 @@ function NovoColaborador({ units = UNITS, grupos: gruposAll = GRUPOS_ALL, standa
                   <div key={dep} className="ativ-grupo">
                     <div className="ativ-grupo-h">{dep}</div>
                     <div className="ativ-pick">
-                      {areas.map((a) => (
-                        <button key={a} type="button" className={`ativ-chip ${ativ.includes(a) ? "on" : ""}`} onClick={() => toggleAtiv(a)}>
-                          {ativ.includes(a) && <Check size={11} />} {a}
-                        </button>
-                      ))}
+                      {areas.map((a) => {
+                        const marcado = ativ.includes(a);
+                        const data = treinos[a] || "";
+                        return (
+                          <div key={a} className="ativ-item">
+                            <button type="button" className={`ativ-chip ${marcado ? "on" : ""}`} onClick={() => toggleAtiv(a)}>
+                              {marcado && <Check size={11} />} {a}
+                            </button>
+                            {marcado && (
+                              <label className="treino-data" onClick={(e) => e.stopPropagation()}>
+                                <span>Treinado em</span>
+                                <input type="date" value={data} onChange={(e) => setTreino(a, e.target.value)} />
+                                {data
+                                  ? <span className="treino-ok">treinado em {fmtDate(data)}</span>
+                                  : <span className="treino-aviso">sem treinamento</span>}
+                              </label>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 ))}
-                <div className="form-note" style={{ marginTop: 6 }}>Marque os processos em que ele deve ser auditado. Ficam salvos e já vêm carregados quando ele entra num diagnóstico DTO. Sem marcar nenhum, ele recebe todos.</div>
+                <div className="form-note" style={{ marginTop: 6 }}>Marque os processos em que ele deve ser auditado e informe a data de treinamento (OJT) de cada um. Sem data, o processo fica marcado mas <b>ele não pode ser auditado nele</b> até ser treinado. Sem marcar nenhum processo, ele recebe o checklist completo — mas, pelo mesmo motivo, precisa ter cada um treinado aqui pra deixar de ficar bloqueado.</div>
               </>}
         </Field>
       </div>
       <div className="modal-f">
         <button className="btn ghost" onClick={onClose}>Cancelar</button>
         <button className="btn primary" disabled={!valido}
-          onClick={() => editando ? onEdit(colab.id, { ...f, atividades: ativ }) : onCreate({ ...f, atividades: ativ })}>
+          onClick={() => editando ? onEdit(colab.id, { ...f, atividades: ativ, treinamentos: treinos }) : onCreate({ ...f, atividades: ativ, treinamentos: treinos })}>
           {editando ? "Salvar alterações" : "Cadastrar"}
         </button>
       </div>

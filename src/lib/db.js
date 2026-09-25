@@ -395,21 +395,22 @@ export async function listColaboradores() {
   if (error) throw error;
   return (data || []).map((c) => ({
     id: c.id, nome: c.nome, cargo: c.cargo || "", departamento: c.departamento || "",
-    unidadeId: c.unidade_id, atividades: c.atividades || [],
+    unidadeId: c.unidade_id, atividades: c.atividades || [], treinamentos: c.treinamentos || {},
   }));
 }
-export async function createColaborador({ nome, cargo, departamento, unidadeId, atividades = [] }) {
+export async function createColaborador({ nome, cargo, departamento, unidadeId, atividades = [], treinamentos = {} }) {
   const { error } = await supabase.from("colaboradores")
-    .insert({ nome, cargo, departamento, unidade_id: unidadeId, atividades });
+    .insert({ nome, cargo, departamento, unidade_id: unidadeId, atividades, treinamentos });
   if (error) throw error;
 }
-export async function updateColaborador(id, { nome, cargo, departamento, unidadeId, atividades }) {
+export async function updateColaborador(id, { nome, cargo, departamento, unidadeId, atividades, treinamentos }) {
   const patch = {};
   if (nome !== undefined) patch.nome = nome;
   if (cargo !== undefined) patch.cargo = cargo;
   if (departamento !== undefined) patch.departamento = departamento;
   if (unidadeId !== undefined) patch.unidade_id = unidadeId;
   if (atividades !== undefined) patch.atividades = atividades;
+  if (treinamentos !== undefined) patch.treinamentos = treinamentos;
   const { error } = await supabase.from("colaboradores").update(patch).eq("id", id);
   if (error) throw error;
 }
