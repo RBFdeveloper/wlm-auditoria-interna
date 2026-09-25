@@ -43,7 +43,7 @@ function ExecutarAuditoria({ audit, standards, colaboradores = [], units = UNITS
     }
   };
   const isOPEG = audit.tipo === "OPEG";
-  const RESULTS = ["conforme", "nao_conforme", "na"];
+  const RESULTS = isOPEG ? ["conforme", "nao_conforme"] : ["conforme", "nao_conforme", "na"];
   const avaliadoR = (r) => r === "conforme" || r === "nao_conforme";
   const pend = (i) => !i.resultado || i.resultado === "pendente";
   const semC = (i) => (i.resultado === "nao_conforme" || i.resultado === "na") && !(i.obs || "").trim();

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ClipboardList, FileText, Building2, Contact, ShieldCheck } from "lucide-react";
+import { ClipboardList, FileText, Building2, Contact, ShieldCheck, Search } from "lucide-react";
 import { NC_STATUS, SEV, UNITS } from "../constants";
 import { unitById, fmtDate } from "../utils";
 import { Empty, StatusPill } from "../ui/common";
@@ -7,6 +7,7 @@ import { Empty, StatusPill } from "../ui/common";
 function NaoConformidades({ ncs, audits = [], responsaveis = [], units = UNITS, canTreat, onTreat }) {
   const [fst, setFst] = useState("todos");
   const [fcasa, setFcasa] = useState("todas");
+  const [q, setQ] = useState("");
   const audById = (id) => audits.find((a) => a.id === id);
   const respDaCasa = (unidadeId) => {
     const nomes = responsaveis.filter((u) => u.responsavelUnidades?.includes(unidadeId)).map((u) => u.nome);
@@ -16,11 +17,19 @@ function NaoConformidades({ ncs, audits = [], responsaveis = [], units = UNITS, 
   const casasNC = [...new Set(ncs.map((n) => audById(n.auditoriaId)?.unidadeId).filter(Boolean))];
   const list = ncs.filter((n) => {
     const a = audById(n.auditoriaId);
-    return (fst === "todos" || n.status === fst) && (fcasa === "todas" || a?.unidadeId === fcasa);
+    const texto = q.trim().toLowerCase();
+    const buscaOk = !texto ||
+      (a && unitById(a.unidadeId, units)?.nome.toLowerCase().includes(texto)) ||
+      (a?.codigoFmt || "").toLowerCase().includes(texto);
+    return (fst === "todos" || n.status === fst) && (fcasa === "todas" || a?.unidadeId === fcasa) && buscaOk;
   });
   return (
     <div className="card">
       <div className="filtros">
+        <div className="search">
+          <Search size={16} />
+          <input placeholder="Buscar por casa ou código do diagnóstico" value={q} onChange={(e) => setQ(e.target.value)} />
+        </div>
         <div className="seg">
           {["todos", "aberta", "em_tratamento", "resolvida"].map((s) => (
             <button key={s} className={fst === s ? "on" : ""} onClick={() => setFst(s)}>

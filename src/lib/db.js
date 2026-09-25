@@ -301,6 +301,17 @@ export async function createAuditoria({
   } else {
     itens = reqsDe(areasDoModo()).map((r) => ({ auditoria_id: aud.id, ...r, resultado: "pendente", obs: "" }));
   }
+  // deduplica por requisito único (código+área+sujeito): em modo departamento uma
+  // área "sem departamento" (geral) entra pra qualquer departamento, e se o padrão
+  // tiver alguma área sobreposta com o mesmo requisito, sem isso ele duplicaria
+  // no diagnóstico.
+  const vistos = new Set();
+  itens = itens.filter((it) => {
+    const chave = `${it.area}|${it.codigo}|${it.colaborador_id || ""}|${it.processo || ""}`;
+    if (vistos.has(chave)) return false;
+    vistos.add(chave);
+    return true;
+  });
   if (itens.length) {
     const { error: e2 } = await supabase.from("auditoria_itens").insert(itens);
     if (e2) throw e2;
